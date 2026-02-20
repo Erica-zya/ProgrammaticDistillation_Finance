@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# local data
+data/
+dataset_raw/
+dataset_filtered/
+*.json
+*.zip
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env
+.ipynb_checkpoints/
+
+# logs
+*.log
