@@ -4,9 +4,7 @@
 
 # local data
 
-dataset_raw/
-*.json
-*.zip
+dataset_raw/*.json
 
 # python
 __pycache__/
