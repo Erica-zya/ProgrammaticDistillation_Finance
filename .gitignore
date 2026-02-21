@@ -3,9 +3,8 @@
 **/.DS_Store
 
 # local data
-data/
+
 dataset_raw/
-dataset_filtered/
 *.json
 *.zip
 
