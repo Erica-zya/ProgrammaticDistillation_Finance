@@ -149,7 +149,7 @@ if __name__ == "__main__":
     filtered_test_stats = compute_stats(filtered_test_data)
 
     # plot 
-    save_path='./plots/'
+    save_path='../plots/'
     # Answer type
     plot_bar_grouped_3splits(full_train_stats['answer_type'], full_dev_stats['answer_type'], full_test_stats['answer_type'], "Answer Type Distribution", x_lable="Type",save_path=save_path+"answer_type_distribution_full.png") 
     plot_bar_grouped_3splits(filtered_train_stats['answer_type'], filtered_dev_stats['answer_type'], filtered_test_stats['answer_type'], "Answer Type Distribution", x_lable="Type", save_path=save_path+"answer_type_distribution_filtered.png")    
