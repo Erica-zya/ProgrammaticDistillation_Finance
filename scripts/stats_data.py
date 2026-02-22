@@ -58,12 +58,13 @@ def compute_stats(data):
             #d=q['derivation']
             d = q.get("derivation", "")
             if isinstance(d, str) and d.strip() != "":
-                derivation_empty[True]+=1
-            else:
                 derivation_empty[False]+=1
+            else:
+                derivation_empty[True]+=1
             s = q.get("scale", "")
-            if isinstance(s, str) and d.strip() != "":
-                scale[s]=scale.get(s,0)+1
+            if not isinstance(s, str):
+                s = str(s)
+            scale[s] = scale.get(s, 0) + 1
     
     stats['n_questions']=n_quesions
     stats['answer_type']=answer_type
@@ -79,7 +80,7 @@ def compute_stats(data):
 
 
 def plot_bar_grouped_3splits(train_dict, dev_dict, test_dict, title,x_lable, save_path=None):
-    order=train_dict.keys()
+    order=list(train_dict.keys())
     train_counts = [train_dict[k] for k in order]
     dev_counts   = [dev_dict[k] for k in order]
     test_counts  = [test_dict[k] for k in order]
@@ -103,9 +104,10 @@ def plot_bar_grouped_3splits(train_dict, dev_dict, test_dict, title,x_lable, sav
     if save_path:
         plt.savefig(save_path, dpi=200)
     #plt.show()
+    plt.close()
 
 
-
+########## heatmap
 def compute_type_from_table(data, type_order, from_order):
     # 4x3 count table: rows=answer_type, cols=answer_from
     table = [[0 for _ in from_order] for _ in type_order]
@@ -122,6 +124,40 @@ def compute_type_from_table(data, type_order, from_order):
                 total += 1
     return table, total
 
+
+def plot_heatmap(count_table, title, type_order, from_order,
+                        normalize=False, save_path=None):
+    # normalize=True will display percentages instead of counts
+    if normalize:
+        total = sum(sum(row) for row in count_table)
+        display = [[(v / total * 100.0) if total > 0 else 0.0 for v in row] for row in count_table]
+    else:
+        display = count_table
+
+    plt.figure()
+    plt.imshow(display, aspect="auto")
+    plt.title(title)
+    plt.xlabel("Answer source")
+    plt.ylabel("Answer type")
+    plt.xticks(range(len(from_order)), from_order, rotation=15)
+    plt.yticks(range(len(type_order)), type_order)
+
+    # annotate each cell
+    for i in range(len(type_order)):
+        for j in range(len(from_order)):
+            v = display[i][j]
+            if normalize:
+                text = f"{v:.1f}%"
+            else:
+                text = str(v)
+            plt.text(j, i, text, ha="center", va="center")
+
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=200, bbox_inches="tight")
+    #plt.show()
+    plt.close()
+################
 
 if __name__ == "__main__":
     # --- Change these two lines to switch datasets ---
@@ -160,6 +196,28 @@ if __name__ == "__main__":
     # heatmap
     TYPE_ORDER = ["span", "multi-span", "arithmetic", "count"]
     FROM_ORDER = ["table", "text", "table-text"]
+    # full train
+    table_train_full, total_train_full=compute_type_from_table(full_train_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_train_full, f"Answer Type × Answer Source (Train %)  (N={total_train_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_train_full_pct.png")
+    # full dev train
+    table_dev_full, total_dev_full=compute_type_from_table(full_dev_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_dev_full, f"Answer Type × Answer Source (Dev %)  (N={total_dev_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_dev_full_pct.png")
+    # full test train
+    table_test_full, total_test_full=compute_type_from_table(full_test_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_test_full, f"Answer Type × Answer Source (Test %)  (N={total_test_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_test_full_pct.png")
+
+     # filtered train
+    table_train_filtered, total_train_filtered=compute_type_from_table(filtered_train_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_train_filtered, f"Answer Type × Answer Source (Train %)  (N={total_train_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_train_filtered_pct.png")
+    # full dev train
+    table_dev_filtered, total_dev_filtered=compute_type_from_table(filtered_dev_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_dev_filtered, f"Answer Type × Answer Source (Dev %)  (N={total_dev_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_dev_filtered_pct.png")
+    # full test train
+    table_test_filtered, total_test_filtered=compute_type_from_table(filtered_test_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
+    plot_heatmap(table_test_filtered, f"Answer Type × Answer Source (Test %)  (N={total_test_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_test_filtered_pct.png")
+
+    
+
 
                          
 
