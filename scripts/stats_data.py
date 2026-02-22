@@ -22,10 +22,12 @@ import matplotlib.pyplot as plt
 #        - cross: answer_type x derivation_empty (for full data)
 #   3) Save a JSON summary
 #.  4) Generate plots: 
-#      - answer type distribution
-#.     - answer source distributiom
-#      - heatmap: answer type x answer source
-#      - derivation_empty distribution
+#    - Bar: answer_type distribution (Train/Dev/Test, FULL vs FILTERED)
+#    - Bar: answer_from/source distribution (Train/Dev/Test, FULL vs FILTERED)
+#    - Heatmap: answer_type × answer_from (4×3, %, Train/Dev/Test, FULL vs FILTERED)
+#    - Bar: derivation_empty distribution (empty vs non-empty, Train/Dev/Test, FULL vs FILTERED)
+#    - Bar: req_comparison distribution (Train/Dev/Test, FULL vs FILTERED)
+#    - Bar: scale distribution (Top-K, %, FULL) + print #unique scales
 # ============================================================
 
 def load_json(json_path: str):
@@ -167,6 +169,12 @@ def rename_derivation_dict(d):
         "non-empty": d.get(False, 0),
     }
 
+def rename_bool_dict(d, true_label, false_label):
+    return {
+        true_label: d.get(True, 0),
+        false_label: d.get(False, 0),
+    }
+
 if __name__ == "__main__":
     # --- Change these two lines to switch datasets ---
     full_train = "../dataset_raw/tatqa_dataset_train.json"
@@ -242,7 +250,24 @@ if __name__ == "__main__":
     x_lable="derivation",
     save_path=save_path+"derivation_empty_filtered.png"
 )
-
+    #### require comparison empty?
+    plot_bar_grouped_3splits(
+    rename_bool_dict(full_train_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    rename_bool_dict(full_dev_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    rename_bool_dict(full_test_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    title="Requires Comparison Distribution",
+    x_lable="requires_comparison",
+    save_path=save_path+"req_comparison_distribution_full.png"
+)
+    
+    plot_bar_grouped_3splits(
+    rename_bool_dict(filtered_train_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    rename_bool_dict(filtered_dev_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    rename_bool_dict(filtered_test_stats["req_comparison"], "requires_comparison", "no_comparison"),
+    title="Requires Comparison Distribution",
+    x_lable="requires_comparison",
+    save_path=save_path+"req_comparison_distribution_filtered.png"
+)
 
 
     
