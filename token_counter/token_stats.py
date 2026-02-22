@@ -12,7 +12,7 @@ from transformers import AutoTokenizer
 # =========================
 MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
 # change to your own path
-DATA_DIR = Path(r"D:\Stanford\2026 winter\ProgrammaticDistillation_Finance\dataset_filtered")
+DATA_DIR = Path(r"PATH")
 SPLITS = {
     "train": "tatqa_dataset_train_filtered",
     "dev": "tatqa_dataset_dev_filtered",
