@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 #      - answer type distribution
 #.     - answer source distributiom
 #      - heatmap: answer type x answer source
+#      - derivation_empty distribution
 # ============================================================
 
 def load_json(json_path: str):
@@ -159,6 +160,13 @@ def plot_heatmap(count_table, title, type_order, from_order,
     plt.close()
 ################
 
+def rename_derivation_dict(d):
+    # True=empty, False=non-empty
+    return {
+        "empty": d.get(True, 0),
+        "non-empty": d.get(False, 0),
+    }
+
 if __name__ == "__main__":
     # --- Change these two lines to switch datasets ---
     full_train = "../dataset_raw/tatqa_dataset_train.json"
@@ -209,12 +217,33 @@ if __name__ == "__main__":
      # filtered train
     table_train_filtered, total_train_filtered=compute_type_from_table(filtered_train_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
     plot_heatmap(table_train_filtered, f"Answer Type × Answer Source (Train %)  (N={total_train_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_train_filtered_pct.png")
-    # full dev train
+    # filtered dev train
     table_dev_filtered, total_dev_filtered=compute_type_from_table(filtered_dev_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
     plot_heatmap(table_dev_filtered, f"Answer Type × Answer Source (Dev %)  (N={total_dev_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_dev_filtered_pct.png")
-    # full test train
+    # filtered test train
     table_test_filtered, total_test_filtered=compute_type_from_table(filtered_test_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
     plot_heatmap(table_test_filtered, f"Answer Type × Answer Source (Test %)  (N={total_test_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_test_filtered_pct.png")
+
+    #### derivation empty?
+    plot_bar_grouped_3splits(
+    rename_derivation_dict(full_train_stats["derivation_empty"]),
+    rename_derivation_dict(full_dev_stats["derivation_empty"]),
+    rename_derivation_dict(full_test_stats["derivation_empty"]),
+    title="Derivation Empty Distribution",
+    x_lable="derivation",
+    save_path=save_path+"derivation_empty_full.png"
+)
+    
+    plot_bar_grouped_3splits(
+    rename_derivation_dict(filtered_train_stats["derivation_empty"]),
+    rename_derivation_dict(filtered_dev_stats["derivation_empty"]),
+    rename_derivation_dict(filtered_test_stats["derivation_empty"]),
+    title="Derivation Empty Distribution",
+    x_lable="derivation",
+    save_path=save_path+"derivation_empty_filtered.png"
+)
+
+
 
     
 
