@@ -27,7 +27,6 @@ import matplotlib.pyplot as plt
 #    - Heatmap: answer_type × answer_from (4×3, %, Train/Dev/Test, FULL vs FILTERED)
 #    - Bar: derivation_empty distribution (empty vs non-empty, Train/Dev/Test, FULL vs FILTERED)
 #    - Bar: req_comparison distribution (Train/Dev/Test, FULL vs FILTERED)
-#    - Bar: scale distribution (Top-K, %, FULL) + print #unique scales
 # ============================================================
 
 def load_json(json_path: str):
@@ -75,6 +74,8 @@ def compute_stats(data):
     stats['req_comparison']=req_comparison
     stats["derivation_empty"]=derivation_empty
     stats["scale"]=scale
+
+    print(stats)
     
     return stats
 
@@ -174,6 +175,8 @@ def rename_bool_dict(d, true_label, false_label):
         true_label: d.get(True, 0),
         false_label: d.get(False, 0),
     }
+
+
 
 if __name__ == "__main__":
     # --- Change these two lines to switch datasets ---
