@@ -56,21 +56,54 @@ def evaluate_json(golden_answers: Dict[str, Any], predicted_answers: Dict[str, A
     print("---- f1 detail ---")
     print(detail_f1)
 
-
+def save_json(obj, save_path: str):
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
 
 # Load gold and prediction files, then call evaluate_json
 def evaluate_prediction_file(gold_path: str,
                              pred_path: str):
+    
+
+
+    """
+    Evaluate a prediction file against the gold file.
+
+    Notes:
+    - Add an intermediate "evaluation input" file generated from the JSONL predictions.
+      This file is saved next to pred_path with suffix "_eval_input.json".
+    """
+
 
     golden_answers = json.load(open(gold_path, encoding='utf-8'))
-    predicted_answers = json.load(open(pred_path, encoding='utf-8'))
-    evaluate_json(golden_answers, predicted_answers)
+
+    # Load gold answers (do not change)
+    with open(pred_path, encoding="utf-8") as f:
+        results = [json.loads(line) for line in f if line.strip()]
+
+    
+    
+    # Load predictions from JSONL (one JSON object per line)
+    pred_map={}
+    for r in results:
+        pred_map[r["qid"]]=[r["pred_answer"],""]
+
+    # Construct the dict expected by the evaluator:
+    # { qid: [pred_answer, ""] }
+    save_path=pred_path[:-6]+"_eval_input.json"
+    # Save an intermediate file for debugging / reproducibility
+    # Example: teacher_codegen_test_results.jsonl -> teacher_codegen_test_results_eval_input.json
+
+    save_json(pred_map, save_path)
+    
+    # Run evaluation
+    evaluate_json(golden_answers, pred_map)
 
 
 if __name__ == "__main__":
     # pylint: disable=invalid-name
     # How to use:
-    # python3 tatqa_eval.py --gold_path ../dataset_raw/tatqa_dataset_dev.json --pred_path ./sample_prediction.json
+    # python3 ./test_metric/tatqa_eval.py --gold_path ./dataset_raw/tatqa_dataset_test_gold.json --pred_path ./teacher_model/outputs/teacher_codegen_test_results.jsonl
     parser = argparse.ArgumentParser(description='evaluation on TAT-QA dataset')
     parser.add_argument("--gold_path",
                         type=str,
@@ -82,6 +115,6 @@ if __name__ == "__main__":
                         required=True,
                         default="sample_predictions.json",
                         help='The path of the prediction file')
-
+    
     args = parser.parse_args()
     evaluate_prediction_file(args.gold_path, args.pred_path)
