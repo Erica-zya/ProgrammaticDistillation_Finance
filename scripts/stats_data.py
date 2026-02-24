@@ -36,48 +36,56 @@ def load_json(json_path: str):
     data = json.loads(json_path.read_text(encoding="utf-8"))
     return data
 
-def compute_stats(data):
+def compute_stats(data, split_name="Split"):
     stats = {}
     stats["n_contexts"] = len(data)
     
     answer_type = {}
     answer_from = {}
     req_comparison = {True: 0, False: 0}
-    scale = {}
-    derivation_empty = {True: 0, False: 0}
-
-    n_quesions=0
+    
+    n_questions = 0
     for ctx in data:
-        questions=ctx['questions']
-        for q in questions:
-            n_quesions+=1
-            ans_t=q['answer_type']
-            answer_type[ans_t]=answer_type.get(ans_t,0)+1
-            ans_f=q['answer_from']
-            answer_from[ans_f]=answer_from.get(ans_f,0)+1
-            r_compare=q['req_comparison']
-            req_comparison[r_compare]+=1
-            #d=q['derivation']
-            d = q.get("derivation", "")
-            if isinstance(d, str) and d.strip() != "":
-                derivation_empty[False]+=1
-            else:
-                derivation_empty[True]+=1
-            s = q.get("scale", "")
-            if not isinstance(s, str):
-                s = str(s)
-            scale[s] = scale.get(s, 0) + 1
-    
-    stats['n_questions']=n_quesions
-    stats['answer_type']=answer_type
-    stats['answer_from']=answer_from
-    stats['req_comparison']=req_comparison
-    stats["derivation_empty"]=derivation_empty
-    stats["scale"]=scale
+        for q in ctx['questions']:
+            n_questions += 1
+            # Counts
+            at = q['answer_type']
+            answer_type[at] = answer_type.get(at, 0) + 1
+            af = q['answer_from']
+            answer_from[af] = answer_from.get(af, 0) + 1
+            req_comparison[q['req_comparison']] += 1
 
-    print(stats)
+    stats['n_questions'] = n_questions
     
+    # calculates percentages
+    stats['percentages'] = {
+        'answer_type': {k: (v / n_questions) * 100 for k, v in answer_type.items()},
+        'answer_from': {k: (v / n_questions) * 100 for k, v in answer_from.items()},
+        'req_comparison': {k: (v / n_questions) * 100 for k, v in req_comparison.items()}
+    }
+    
+    stats['answer_type'] = answer_type
+    stats['answer_from'] = answer_from
+    stats['req_comparison'] = req_comparison
+
     return stats
+
+def print_comprehensive_report(full_stats, filt_train, filt_dev, filt_test, label):
+    print(f"\n{'='*20} {label.upper()} DISTRIBUTION (%) {'='*20}")
+    print(f"{'Category':<15} | {'Full Train':<10} | {'Filt. Train':<10} | {'Filt. Dev':<10} | {'Filt. Test':<10}")
+    print("-" * 75)
+    
+    # Get all unique keys
+    all_keys = set(full_stats['percentages'][label].keys()) | \
+               set(filt_train['percentages'][label].keys())
+    
+    for key in sorted(all_keys):
+        f_tr  = full_stats['percentages'][label].get(key, 0)
+        fi_tr = filt_train['percentages'][label].get(key, 0)
+        fi_dv = filt_dev['percentages'][label].get(key, 0)
+        fi_ts = filt_test['percentages'][label].get(key, 0)
+        
+        print(f"{str(key):<15} | {f_tr:>9.1f}% | {fi_tr:>9.1f}% | {fi_dv:>9.1f}% | {fi_ts:>9.1f}%")
 
 
 
@@ -179,100 +187,55 @@ def rename_bool_dict(d, true_label, false_label):
 
 
 if __name__ == "__main__":
-    # --- Change these two lines to switch datasets ---
-    full_train = "../dataset_raw/tatqa_dataset_train.json"
-    filtered_train = "../dataset_filtered/tatqa_dataset_train_filtered.json"
-    full_dev = "../dataset_raw/tatqa_dataset_dev.json"
-    filtered_dev = "../dataset_filtered/tatqa_dataset_dev_filtered.json"
-    full_test = "../dataset_raw/tatqa_dataset_test_gold.json"
-    filtered_test = "../dataset_filtered/tatqa_dataset_test_gold_filtered.json"
+    # 1. Setup paths (resolve everything relative to the project root)
+    project_root = Path(__file__).resolve().parent.parent
+    save_path = project_root / "plots"
+    save_path.mkdir(parents=True, exist_ok=True)
 
-    # Load
-    full_train_data = load_json(full_train)
-    filtered_train_data = load_json(filtered_train)
-    full_dev_data = load_json(full_dev)
-    filtered_dev_data = load_json(filtered_dev)
-    full_test_data = load_json(full_test)
-    filtered_test_data = load_json(filtered_test)
+    # Define paths for the comprehensive report (raw and filtered JSON)
+    paths = {
+        "full_train":   project_root / "dataset_raw" / "tatqa_dataset_train.json",
+        "full_dev":     project_root / "dataset_raw" / "tatqa_dataset_dev.json",
+        "full_test":    project_root / "dataset_raw" / "tatqa_dataset_test_gold.json",
+        "filt_train":   project_root / "dataset_filtered" / "tatqa_dataset_train_filtered.json",
+        "filt_dev":     project_root / "dataset_filtered" / "tatqa_dataset_dev_filtered.json",
+        "filt_test":    project_root / "dataset_filtered" / "tatqa_dataset_test_gold_filtered.json",
+    }
 
-    # Compute
-    full_train_stats = compute_stats(full_train_data)
-    filtered_train_stats = compute_stats(filtered_train_data)
-    full_dev_stats = compute_stats(full_dev_data)
-    filtered_dev_stats = compute_stats(filtered_dev_data)
-    full_test_stats = compute_stats(full_test_data)
-    filtered_test_stats = compute_stats(filtered_test_data)
+    # 2. Compute Stats for all splits (this replaces the individual compute_stats calls)
+    all_stats = {}
+    for name, path in paths.items():
+        data = load_json(path)
+        all_stats[name] = compute_stats(data, name)
 
-    # plot 
-    save_path='../plots/'
-    # Answer type
-    plot_bar_grouped_3splits(full_train_stats['answer_type'], full_dev_stats['answer_type'], full_test_stats['answer_type'], "Answer Type Distribution", x_lable="Type",save_path=save_path+"answer_type_distribution_full.png") 
-    plot_bar_grouped_3splits(filtered_train_stats['answer_type'], filtered_dev_stats['answer_type'], filtered_test_stats['answer_type'], "Answer Type Distribution", x_lable="Type", save_path=save_path+"answer_type_distribution_filtered.png")    
-    # Answer from
-    plot_bar_grouped_3splits(full_train_stats['answer_from'], full_dev_stats['answer_from'], full_test_stats['answer_from'], "Answer Source Distribution", x_lable="Answer Source", save_path=save_path+"answer_from_distribution_full.png") 
-    plot_bar_grouped_3splits(filtered_train_stats['answer_from'], filtered_dev_stats['answer_from'], filtered_test_stats['answer_from'], "Answer Source Distribution", x_lable="Answer Source", save_path=save_path+"answer_from_distribution_filtered.png")    
+    # 3. Generate the Plots (using the all_stats dictionary)
+    # Answer type plots
+    plot_bar_grouped_3splits(all_stats['full_train']['answer_type'], all_stats['full_dev']['answer_type'], all_stats['full_test']['answer_type'], 
+                             "Answer Type Distribution (Full)", x_lable="Type", save_path=str(save_path/"answer_type_distribution_full.png")) 
+    plot_bar_grouped_3splits(all_stats['filt_train']['answer_type'], all_stats['filt_dev']['answer_type'], all_stats['filt_test']['answer_type'], 
+                             "Answer Type Distribution (Filtered)", x_lable="Type", save_path=str(save_path/"answer_type_distribution_filtered.png"))    
 
-    # heatmap
-    TYPE_ORDER = ["span", "multi-span", "arithmetic", "count"]
-    FROM_ORDER = ["table", "text", "table-text"]
-    # full train
-    table_train_full, total_train_full=compute_type_from_table(full_train_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_train_full, f"Answer Type × Answer Source (Train %)  (N={total_train_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_train_full_pct.png")
-    # full dev train
-    table_dev_full, total_dev_full=compute_type_from_table(full_dev_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_dev_full, f"Answer Type × Answer Source (Dev %)  (N={total_dev_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_dev_full_pct.png")
-    # full test train
-    table_test_full, total_test_full=compute_type_from_table(full_test_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_test_full, f"Answer Type × Answer Source (Test %)  (N={total_test_full})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_test_full_pct.png")
-
-     # filtered train
-    table_train_filtered, total_train_filtered=compute_type_from_table(filtered_train_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_train_filtered, f"Answer Type × Answer Source (Train %)  (N={total_train_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_train_filtered_pct.png")
-    # filtered dev train
-    table_dev_filtered, total_dev_filtered=compute_type_from_table(filtered_dev_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_dev_filtered, f"Answer Type × Answer Source (Dev %)  (N={total_dev_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_dev_filtered_pct.png")
-    # filtered test train
-    table_test_filtered, total_test_filtered=compute_type_from_table(filtered_test_data, type_order=TYPE_ORDER, from_order=FROM_ORDER)
-    plot_heatmap(table_test_filtered, f"Answer Type × Answer Source (Test %)  (N={total_test_filtered})", TYPE_ORDER, FROM_ORDER , normalize=True, save_path=save_path+"heatmap_type_x_source_test_filtered_pct.png")
-
-    #### derivation empty?
-    plot_bar_grouped_3splits(
-    rename_derivation_dict(full_train_stats["derivation_empty"]),
-    rename_derivation_dict(full_dev_stats["derivation_empty"]),
-    rename_derivation_dict(full_test_stats["derivation_empty"]),
-    title="Derivation Empty Distribution",
-    x_lable="derivation",
-    save_path=save_path+"derivation_empty_full.png"
-)
+    # 4. Print the Consistency Report Table
+    print("\n")
+    print("DATASET TRANSFORMATION & CONSISTENCY REPORT (PERCENTAGES)")
     
-    plot_bar_grouped_3splits(
-    rename_derivation_dict(filtered_train_stats["derivation_empty"]),
-    rename_derivation_dict(filtered_dev_stats["derivation_empty"]),
-    rename_derivation_dict(filtered_test_stats["derivation_empty"]),
-    title="Derivation Empty Distribution",
-    x_lable="derivation",
-    save_path=save_path+"derivation_empty_filtered.png"
-)
-    #### require comparison empty?
-    plot_bar_grouped_3splits(
-    rename_bool_dict(full_train_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    rename_bool_dict(full_dev_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    rename_bool_dict(full_test_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    title="Requires Comparison Distribution",
-    x_lable="requires_comparison",
-    save_path=save_path+"req_comparison_distribution_full.png"
-)
-    
-    plot_bar_grouped_3splits(
-    rename_bool_dict(filtered_train_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    rename_bool_dict(filtered_dev_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    rename_bool_dict(filtered_test_stats["req_comparison"], "requires_comparison", "no_comparison"),
-    title="Requires Comparison Distribution",
-    x_lable="requires_comparison",
-    save_path=save_path+"req_comparison_distribution_filtered.png"
-)
+    # This specifically compares Full Train vs Filtered Splits
+    for category in ['answer_type', 'answer_from', 'req_comparison']:
+        print_comprehensive_report(
+            all_stats["full_train"], 
+            all_stats["filt_train"], 
+            all_stats["filt_dev"], 
+            all_stats["filt_test"], 
+            category
+        )
 
-
+    # 5. Volume Summary
+    print(f"\n{'='*20} VOLUME SUMMARY {'='*20}")
+    n_full = all_stats['full_train']['n_questions']
+    n_filt = all_stats['filt_train']['n_questions']
+    print(f"Original Train questions: {n_full}")
+    print(f"Filtered Train questions: {n_filt}")
+    print(f"Retention Rate: {(n_filt/n_full)*100:.1f}%")
     
 
 

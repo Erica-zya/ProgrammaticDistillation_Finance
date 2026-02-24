@@ -2,6 +2,7 @@ import os, json, time, argparse, re
 from pathlib import Path
 import requests
 from dotenv import load_dotenv
+import dspy
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR.parent / "dataset_filtered"
@@ -18,6 +19,7 @@ Rules:
 - Use ONLY the given TABLE and PARAGRAPHS.
 - Infer and apply any scale/unit ONLY if explicitly stated.
 - Output MUST be raw Python code only.
+- Include comments throughout your response to explain your code.
 - End with a single print(...) of the final answer.
 
 TABLE:\n{table}\nPARAGRAPHS:\n{paras}\nQUESTION:\n{question}\nGOLD_DERIVATION:\n{derivation}"""

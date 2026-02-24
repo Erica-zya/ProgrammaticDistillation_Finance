@@ -21,6 +21,22 @@ def _worker_exec(code, q):
     try:
         allowed = ('abs','min','max','sum','round','int','float','str','len','range','enumerate','print')
         safe_env = {k: getattr(builtins, k) for k in allowed}
+        safe_env['math'] = math
+        
+        # clean the value of the answer to handle '$1,234.50', '15.5%', and '(100)' for negative numbers.
+        def clean_val(x):
+            """Helper to handle '$1,234.50', '15.5%', and '(100)' for negative numbers."""
+            if isinstance(x, (int, float)): return x
+            s = str(x).strip().replace(",", "").replace("$", "").replace("%", "")
+            if re.fullmatch(r"\(.*\)", s):
+                s = "-" + re.sub(r"[()\s]", "", s)
+            try:
+                return float(s)
+            except:
+                return 0.0
+        
+        safe_env['clean_val'] = clean_val
+
         with contextlib.redirect_stdout(buf):
             exec(code, {"__builtins__": safe_env}, {})
         q.put({"stdout": buf.getvalue(), "error": ""})

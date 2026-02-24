@@ -205,8 +205,8 @@ def count_nonempty_derivation(json_path: str):
         
 
 def main():
-    # Path to the raw TAT-QA JSON file (context-level)
-    json_path = "../dataset_raw/tatqa_dataset_test_gold.json"
+    # change to your own path
+    json_path = Path(__file__).resolve().parent.parent / "dataset_raw" / "tatqa_dataset_test_gold.json"
     # Uncomment to preview a few contexts
     #preview_tatqa_json(json_path=json_path)
 
