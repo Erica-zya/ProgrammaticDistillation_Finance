@@ -1,0 +1,293 @@
+{
+    "answer_type=arithmetic|answer_from=table": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "e78f8b29-6085-43de-b32f-be1a68641be3",
+      "paragraph_uids": [
+        "62be4f5a-1693-4e6b-8bb4-0a4e1e40b409",
+        "c63e6ed5-8fe5-46e4-a02a-f923e90e8067",
+        "b4093fd4-43ea-4b31-9975-13c0012a0b18",
+        "9f6ecb32-9e2c-4036-8209-8905855145c0"
+      ],
+      "question": {
+        "uid": "dbee8930-0110-41c7-95fe-0178ddf4f841",
+        "order": 4,
+        "question": "What is the 2019 average rate of inflation?",
+        "answer": 2.9,
+        "derivation": "(2.9+2.9)/2",
+        "answer_type": "arithmetic",
+        "answer_from": "table",
+        "rel_paragraphs": [],
+        "req_comparison": false,
+        "scale": "percent"
+      }
+    },
+    "answer_type=span|answer_from=table": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "98c16699-d385-4631-91de-1bc3c87f9f99",
+      "paragraph_uids": [
+        "1ef0dbdd-15d0-4577-b068-dca80af4f851",
+        "87193521-f886-49d3-b059-f8e7f5fc7dc1",
+        "1ef948be-979b-4ac2-9593-67114ccef125",
+        "5874de4f-3b36-4659-ad37-059679ef445d",
+        "faa001e2-1bc2-446b-9c2c-9d4479013962",
+        "82ad7605-6ce3-40a1-919f-a8c7b3ca36ab",
+        "ddf26912-5783-4b3b-b351-87e91b4a5f5b",
+        "ba5b9da5-9420-4035-ae46-6239e4548a9e",
+        "5f491929-b2e4-4fad-909b-bb77e3a440b4",
+        "5f92f6fc-fdca-4f15-bab6-bcecd521d07a"
+      ],
+      "question": {
+        "uid": "f46b8d2a-06aa-4e51-a05d-f3beb255f73c",
+        "order": 5,
+        "question": "Which year have greater total accumulated amortisation? ",
+        "answer": [
+          "2019"
+        ],
+        "derivation": "2019: (5,580) vs 2018: (3,261)",
+        "answer_type": "span",
+        "answer_from": "table",
+        "rel_paragraphs": [],
+        "req_comparison": true,
+        "scale": ""
+      }
+    },
+    "answer_type=count|answer_from=table-text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "991d23d7-f32d-4954-8e1d-87ad22470fcf",
+      "paragraph_uids": [
+        "6597634c-716e-4a2d-9a19-22f8563a0b1a",
+        "a4d3952f-4390-4ab2-b6f3-460d14653c10",
+        "d623137a-e787-4204-952a-af9d4ed3a2db",
+        "2fec11a0-66f7-4927-b9c2-8090d7694285",
+        "082528f8-e187-48aa-b7b9-8e0fa77899fb",
+        "f6e4a899-1c8d-45ab-b42b-c869f43f0b21",
+        "2bea93c7-0a63-4134-b886-0e94850bb645",
+        "616fb222-13b2-4ef9-82b8-7d8c7c19053a",
+        "b34f5f62-04d9-464c-a3e4-6774cf82434a",
+        "9b4f9b4b-1bdd-408a-a01c-873f012d75a1",
+        "a002d755-a4d0-44a0-af65-c5cf4692480e"
+      ],
+      "question": {
+        "uid": "2965da5c-4d2a-402c-85c6-c1514f998285",
+        "order": 4,
+        "question": "How many product categories are available?",
+        "answer": "6",
+        "derivation": "Drinkable Kefir other than ProBugs ## Cheese ## Cream and other ## ProBugs Kefir ## Other dairy ## Frozen Kefir",
+        "answer_type": "count",
+        "answer_from": "table-text",
+        "rel_paragraphs": [
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "req_comparison": false,
+        "scale": ""
+      }
+    },
+    "answer_type=arithmetic|answer_from=table-text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "635228dd-44ae-4ad2-817d-2079a9ceb320",
+      "paragraph_uids": [
+        "4e1e1d6c-2438-4e71-a0fe-8d867268458f",
+        "24df1d6f-e3e8-434e-bc29-b713c8483a36",
+        "da076f5e-f9ea-4659-9af5-6821172da7df"
+      ],
+      "question": {
+        "uid": "0dc550d6-ba0a-4f46-b606-b102f5441631",
+        "order": 4,
+        "question": "What was the change in raw materials between 2018 and 2019?",
+        "answer": 48.5,
+        "derivation": "74.5-26.0",
+        "answer_type": "arithmetic",
+        "answer_from": "table-text",
+        "rel_paragraphs": [
+          "2"
+        ],
+        "req_comparison": false,
+        "scale": "million"
+      }
+    },
+    "answer_type=arithmetic|answer_from=text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "eaf92f5c-0a32-4cad-9919-067ae4c20978",
+      "paragraph_uids": [
+        "f100ed48-cf2f-4d96-be05-541b269de07e",
+        "26387b4b-cb4c-4dad-9943-f181d2d37543",
+        "e05d28b8-9f70-4495-a30f-adafa83276a3",
+        "e238be7c-7c74-4535-8dcc-cfaded03484a",
+        "9fda128d-29ed-452a-8cd1-fd36fb80b759",
+        "7784a564-fdcd-48e6-81da-61784a646261"
+      ],
+      "question": {
+        "uid": "3e1a88fd-b2f4-40dd-a7f1-baef93720d4a",
+        "order": 4,
+        "question": "What is the percentage of the value charged to the deficit expressed as a percentage of total cost of common shares?",
+        "answer": 58.86,
+        "derivation": "103/175",
+        "answer_type": "arithmetic",
+        "answer_from": "text",
+        "rel_paragraphs": [
+          "4"
+        ],
+        "req_comparison": false,
+        "scale": "percent"
+      }
+    },
+    "answer_type=multi-span|answer_from=table": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "9ff39953-d7ca-40e1-9824-a14c05ee91e8",
+      "paragraph_uids": [
+        "eceb2adb-e053-49a0-bd56-07458ae90348",
+        "32161079-3481-493d-98d2-a09cd570335a",
+        "f1174b94-1d55-4620-b397-f8ab72e71c6f",
+        "a9a7948f-8187-4ee5-a38d-3c71de7ee030",
+        "d0601c85-19a2-4256-9361-475c0f0fc210",
+        "9217cf65-3c25-45d5-a90e-a8694d9f8483"
+      ],
+      "question": {
+        "uid": "43534a69-ffbb-4c73-8605-7b787ff86979",
+        "order": 6,
+        "question": "In which year was Estimated grant date fair value per ordinary share less than 30?",
+        "answer": [
+          "2018",
+          "2017"
+        ],
+        "derivation": "locate and analyze Estimated grant date fair value per ordinary share in row 7",
+        "answer_type": "multi-span",
+        "answer_from": "table",
+        "rel_paragraphs": [],
+        "req_comparison": true,
+        "scale": ""
+      }
+    },
+    "answer_type=span|answer_from=table-text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "1085435b-dbed-4791-8f29-425c766135e2",
+      "paragraph_uids": [
+        "4cef88c9-a9da-4cac-a43b-65297effb02d",
+        "0701f7d5-62bb-4d24-ae27-422d5b08ada3",
+        "0a2d3383-a9ed-4bd8-80df-984eaffac78f",
+        "e6b8c7be-3c05-49cf-b463-45c7d67c1fdf"
+      ],
+      "question": {
+        "uid": "f8d70551-f40e-4888-8688-ab207af1679e",
+        "order": 4,
+        "question": "In which year is the value of finished products higher?",
+        "answer": [
+          "2019"
+        ],
+        "derivation": "10,905>7,099",
+        "answer_type": "span",
+        "answer_from": "table-text",
+        "rel_paragraphs": [
+          "2"
+        ],
+        "req_comparison": true,
+        "scale": ""
+      }
+    },
+    "answer_type=count|answer_from=text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "4f54542d-0098-44ce-b053-cf4d22ea5e06",
+      "paragraph_uids": [
+        "8f0965f6-b1d8-48c0-9461-cf3b6e0a8482",
+        "cdf21361-dd6a-4177-a598-161fd57f5a34",
+        "6a112db7-b6f1-4807-9327-93c7ab0ecc43",
+        "214852a9-5430-4230-a104-7af0d1d3e026"
+      ],
+      "question": {
+        "uid": "9654e872-339e-4caa-a704-e9d5ca78a3e2",
+        "order": 4,
+        "question": "What is the total number of countries that the Group leases offices in?",
+        "answer": "7",
+        "derivation": "the Netherlands##United States##Australia##Philippines##India##Japan##Turkey",
+        "answer_type": "count",
+        "answer_from": "text",
+        "rel_paragraphs": [
+          "2"
+        ],
+        "req_comparison": false,
+        "scale": ""
+      }
+    },
+    "answer_type=count|answer_from=table": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "e8d97ec8-c820-48d8-b35b-6606d1837c68",
+      "paragraph_uids": [
+        "30f1a731-0b5e-4a7e-a4a9-6771d19375fa",
+        "24d62646-cbff-4df8-800a-70732a194237",
+        "ae1a3f60-9400-4b18-83c3-24766af905bb",
+        "bf2c9e04-fb90-45a1-8172-aedb1953da3d",
+        "f71c5755-cea5-420a-a4b6-3e9fcf5bad8c"
+      ],
+      "question": {
+        "uid": "86382223-b165-48ba-b08a-44aad1195137",
+        "order": 4,
+        "question": "How many years did the Federal statutory income tax rate exceed 30.0%?",
+        "answer": "1",
+        "derivation": "2017",
+        "answer_type": "count",
+        "answer_from": "table",
+        "rel_paragraphs": [],
+        "req_comparison": false,
+        "scale": ""
+      }
+    },
+    "answer_type=multi-span|answer_from=table-text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "f75d631b-2d95-4c9b-a1af-dd1cfffe6e7c",
+      "paragraph_uids": [
+        "989ddfe9-3c79-42f0-a4c6-26326323c959",
+        "473c36aa-8989-43fa-b4b9-77cd6c9f3e66",
+        "10344680-fea6-425c-bfef-fd59954a7786"
+      ],
+      "question": {
+        "uid": "36fa8c8b-12ef-453b-9a59-feca388f56a6",
+        "order": 5,
+        "question": "Which quarters ended did the Gross Margin exceed $120,000 thousand?",
+        "answer": [
+          "Dec-31",
+          "Mar-31"
+        ],
+        "derivation": "(Dec-31:123,750),(Mar-31:126,406)",
+        "answer_type": "multi-span",
+        "answer_from": "table-text",
+        "rel_paragraphs": [
+          "2"
+        ],
+        "req_comparison": true,
+        "scale": ""
+      }
+    },
+    "answer_type=span|answer_from=text": {
+      "source_split": "tatqa_dataset_train_filtered.json",
+      "table_uid": "487ea876-6f31-44c1-8f7b-dc373f24189a",
+      "paragraph_uids": [
+        "6124fda6-b5b4-4503-8d34-16520f2676a9",
+        "82a1ac6b-621d-4262-9ec9-b53be3384e4a",
+        "c487dcd7-63dd-4103-9b1d-8fb84ae3df69",
+        "75fce6c9-375f-4da7-a8f8-289bb357c78e",
+        "c4aa3ae0-d535-41ce-afaa-fb8c539367a1",
+        "59380b8a-cf1e-4dba-9869-c990c7c2d1f8"
+      ],
+      "question": {
+        "uid": "eeb3ce1c-d926-40db-9041-4718d8dc51f7",
+        "order": 4,
+        "question": "In which year was the weighted-average grant-date fair value of restricted share awards granted the largest?",
+        "answer": [
+          "2018"
+        ],
+        "derivation": "$93.45>$77.77>$67.72",
+        "answer_type": "span",
+        "answer_from": "text",
+        "rel_paragraphs": [
+          "4"
+        ],
+        "req_comparison": true,
+        "scale": ""
+      }
+    }
+  }

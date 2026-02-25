@@ -113,12 +113,16 @@ def evaluate_prediction_file(gold_path: str,
     with open(pred_path, encoding="utf-8") as f:
         results = [json.loads(line) for line in f if line.strip()]
 
-    
+    print(type(results))
     
     # Load predictions from JSONL (one JSON object per line)
     pred_map={}
     for r in results:
-        pred_map[r["qid"]]=[r["pred_answer"],""]
+        pred_map[r["qid"]]=[r["pred_answer"],r["pred_scale"]]
+    
+    #print(pred_map)
+
+    
 
     # Construct the dict expected by the evaluator:
     # { qid: [pred_answer, ""] }

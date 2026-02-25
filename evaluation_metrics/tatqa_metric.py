@@ -209,6 +209,8 @@ def get_answer_str(answers: list, scale: str):
     return [" ".join(ans_temp)]
 
 
+
+
 # handle percentage
 def add_percent_pred(prediction_strings, pred_scale, pred):
     """

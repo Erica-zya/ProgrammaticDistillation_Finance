@@ -1,0 +1,56 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "table": " | 2019 % | 2018 % | 2017 %\nWeighted average actuarial assumptions used at 31 March1: |  |  | \nRate of inflation2 | 2.9 | 2.9 | 3.0\nRate of increase in salaries | 2.7 | 2.7 | 2.6\nDiscount rate | 2.3 | 2.5 | 2.6",
+      "paragraphs": "Actuarial assumptions\nThe Group’s scheme liabilities are measured using the projected unit credit method using the principal actuarial assumptions set out below:\nNotes: 1 Figures shown represent a weighted average assumption of the individual schemes.\n2 The rate of increases in pensions in payment and deferred revaluation are dependent on the rate of inflation.",
+      "question": "What is the 2019 average rate of inflation?",
+      "program": "import json\n\n# Extract the rate of inflation for 2019 from the table\nans = \"2.9\"\nscale = \"percent\"\n\nprint(json.dumps({\"ans\": ans, \"scale\": scale}, ensure_ascii=False))"
+    },
+    {
+      "augmented": true,
+      "table": " | Rights and licenses | Internally generated software | Software under development | Total\nMovements | $'000 | $'000 | $'000 | $'000\nAt 30 June 2019 |  |  |  | \nCost | 13 | 12,961 | 16,284 | 29,259\nAccumulated amortisation | - | (5,580) | - | (5,580)\nNetbook amount | 13 | 7,381 | 16,284 | 23,678\n30 June 2018 |  |  |  | \nOpening net book amount at 1 July 2017 | 43 | 442 | 8,053 | 8,538\nAdditions – externally acquired | 13 | - | 5,253 | 5,266\nAdditions – internally developed | - | - | 1,256 | 1,256\nAmortisation | (43) | (1,746) | - | (1,789)\nTransfers | - | 7,563 | (7,563) | -\nTransfer between classes | - | 744 | - | 744\nDisposals | - | (618) | (490) | (1,108)\nClosing net book amount | 13 | 6,385 | 6,509 | 12,907\nAt 30 June 2018 |  |  |  | \nCost | 104 | 9,555 | 6,509 | 16,168\nAccumulated amortisation | (91) | (3,170) | - | (3,261)\nNet book amount | 13 | 6,385 | 6,509 | 12,907",
+      "paragraphs": "11 Intangible assets (continued)\n(a) Intangible assets\nRIGHTS AND LICENCES\nCertain licences that NEXTDC possesses have an indefinite useful life and are carried at cost less impairment losses and are subject to impairment review at least annually and whenever there is an indication that it may be impaired.\nOther licences that NEXTDC acquires are carried at cost less accumulated amortisation and accumulated impairment losses. Amortisation is recognised on a straight-line basis over the estimated useful life. The estimated useful life and amortisation method are reviewed at the end of each annual reporting period.\nINTERNALLY GENERATED SOFTWARE\nInternally developed software is capitalised at cost less accumulated amortisation. Amortisation is calculated using the straight-line basis over the asset’s useful economic life which is generally two to three years. Their useful lives and potential impairment are reviewed at the end of each financial year.\nSOFTWARE UNDER DEVELOPMENT\nCosts incurred in developing products or systems and costs incurred in acquiring software and licenses that will contribute to future period financial benefits through revenue generation and/or cost reduction are capitalised to software and systems. Costs capitalised include external direct costs of materials and services and employee costs.\nAssets in the course of construction include only those costs directly attributable to the development phase and are only recognised following completion of technical feasibility and where the Group has an intention and ability to use the asset.",
+      "question": "Which year have greater total accumulated amortisation? ",
+      "program": "import json\n\n# Extracting the accumulated amortisation values\naccumulated_amortisation_2019 = -5580\naccumulated_amortisation_2018 = -3261\n\n# Determining the year with greater total accumulated amortisation\nif accumulated_amortisation_2019 < accumulated_amortisation_2018:\n    ans = \"2019\"\nelse:\n    ans = \"2018\"\n\nscale = \"\"\n\nprint(json.dumps({\"ans\": ans, \"scale\": scale}, ensure_ascii=False))"
+    },
+    {
+      "augmented": true,
+      "table": " |  | 2019 |  | 2018\nIn thousands | $ | % | $ | %\nDrinkable Kefir other than ProBugs | $ 71,822 | 77% | $ 78,523 | 76%\nCheese | 11,459 | 12% | 11,486 | 11%\nCream and other | 4,228 | 4% | 5,276 | 5%\nProBugs Kefir | 2,780 | 3% | 2,795 | 3%\nOther dairy | 1,756 | 2% | 3,836 | 4%\nFrozen Kefir (a) | 1,617 | 2% | 1,434 | 1%\nNet Sales | $ 93,662 | 100% | $ 103,350 | 100%",
+      "paragraphs": "Our product categories are:\nDrinkable Kefir, sold in a variety of organic and non-organic sizes, flavors, and types, including low fat, non-fat, whole milk, protein, and BioKefir (a 3.5 oz. kefir with additional probiotic cultures).\nEuropean-style soft cheeses, including farmer cheese in resealable cups.\nCream and other, which consists primarily of cream, a byproduct of making our kefir.\nProBugs, a line of kefir products designed for children.\nOther Dairy, which includes Cupped Kefir and Icelandic Skyr, a line of strained kefir and yogurt products in resealable cups.\nFrozen Kefir, available in soft serve and pint-size containers.\nLifeway has determined that it has one reportable segment based on how our chief operating decision maker manages the business and in a manner consistent with the internal reporting provided to the chief operating decision maker. The chief operating decision maker, who is responsible for allocating resources and assessing our performance, has been identified collectively as the Chief Financial Officer, the Chief Operating Officer, the Chief Executive Officer, and Chairperson of the board of directors. Substantially all of our consolidated revenues relate to the sale of cultured dairy products that we produce using the same processes and materials and are sold to consumers through a common network of distributors and retailers in the United States.\nNet sales of products by category were as follows for the years ended December 31:\n(a) Includes Lifeway Kefir Shop sales\nSignificant Customers – Sales are predominately to companies in the retail food industry located within the United States. Two major customers accounted for approximately 22% and 21% of net sales for the years ended December 31, 2019 and 2018, respectively. Two major customers accounted for approximately 17% of accounts receivable as of December 31, 2019 and 2018. Our ten largest customers as a group accounted for approximately 57% and 59% of net sales for the years ended December 31, 2019 and 2018, respectively.",
+      "question": "How many product categories are available?",
+      "program": "import json\n\n# Count the number of product categories\nproduct_categories = [\n    \"Drinkable Kefir other than ProBugs\",\n    \"Cheese\",\n    \"Cream and other\",\n    \"ProBugs Kefir\",\n    \"Other dairy\",\n    \"Frozen Kefir\"\n]\n\nans = len(product_categories)\nscale = \"\"\n\nprint(json.dumps({\"ans\": ans, \"scale\": scale}, ensure_ascii=False))"
+    }
+  ],
+  "signature": {
+    "instructions": "You are a financial analyst tasked with extracting and processing financial data to answer specific questions. Write a Python program that answers the QUESTION using TABLE and PARAGRAPHS.\n\nInstruction:\n1. Compute the final answer and store it in a variable named 'ans'.\n2. Multi-Span Rule: If the QUESTION asks for multiple items (e.g., 'which years', 'list all'), 'ans' MUST be a list of strings. Otherwise, 'ans' is a single string.\n3. Infer scale from context; 'scale' MUST be one of: \"\", \"percent\", \"thousand\", \"million\", \"billion\".\n4. If 'scale' is \"\", 'ans' must be a fully-resolved number (no remaining scaling).\n\nOutput Format:\n- The LAST line of the program MUST be: print(json.dumps({\"ans\": ans, \"scale\": scale}, ensure_ascii=False))\n- Output raw Python only. No Markdown. No other print statements.",
+    "fields": [
+      {
+        "prefix": "Table:",
+        "description": "Financial table in markdown/text format"
+      },
+      {
+        "prefix": "Paragraphs:",
+        "description": "Supporting text context"
+      },
+      {
+        "prefix": "Question:",
+        "description": "The question to answer"
+      },
+      {
+        "prefix": "Program:",
+        "description": "Python code ending with JSON print of ans and scale"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.13",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}
