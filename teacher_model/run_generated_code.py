@@ -19,15 +19,22 @@ def to_float_maybe(x):
 def _worker_exec(code, q):
     buf = io.StringIO()
     try:
-        allowed = ('abs','min','max','sum','round','int','float','str','len','range','enumerate','print')
-        safe_env = {k: getattr(builtins, k) for k in allowed}
+        import builtins as real_builtins
+        safe_env = {k: getattr(real_builtins, k) for k in dir(real_builtins)}
+        
+        import json, math
+        safe_env.update({"json": json, "math": math})
+
+        clean_code = code.replace('\xa0', ' ')
+
         with contextlib.redirect_stdout(buf):
-            exec(code, {"__builtins__": safe_env}, {})
+            exec(clean_code, safe_env)
+            
         q.put({"stdout": buf.getvalue(), "error": ""})
     except Exception as e:
         q.put({"stdout": buf.getvalue(), "error": repr(e)})
 
-def exec_with_timeout(code, timeout_s=2.0):
+def exec_with_timeout(code, timeout_s=5.0):
     q = mp.Queue()
     p = mp.Process(target=_worker_exec, args=(code, q), daemon=True)
     p.start()
@@ -47,8 +54,8 @@ def exec_with_timeout(code, timeout_s=2.0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--in_jsonl", default="teacher_model/outputs/teacher_codegen_test.jsonl")
-    ap.add_argument("--out_jsonl", default="teacher_model/outputs/teacher_codegen_test_results.jsonl")
+    ap.add_argument("--in_jsonl", default="teacher_model/outputs/teacher_codegen_train.jsonl")
+    ap.add_argument("--out_jsonl", default="teacher_model/outputs/teacher_codegen_train_results.jsonl")
     args = ap.parse_args()
     
     in_path = Path(args.in_jsonl)
