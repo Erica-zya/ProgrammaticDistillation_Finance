@@ -118,7 +118,7 @@ def evaluate_prediction_file(gold_path: str,
     # Load predictions from JSONL (one JSON object per line)
     pred_map={}
     for r in results:
-        pred_map[r["qid"]]=[r["pred_answer"],r["pred_scale"]]
+        pred_map[r["qid"]]=[r["pred_ans"],r["pred_scale"]]
     
     #print(pred_map)
 

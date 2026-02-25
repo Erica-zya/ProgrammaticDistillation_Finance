@@ -14,16 +14,48 @@ SPLIT_MAP = {
     "test": "tatqa_dataset_test_gold_filtered.json"
 }
 
-PROMPT_TMPL = """Write a Python program that answers the QUESTION using only TABLE and PARAGRAPHS.
-Rules:
-- Use ONLY the given TABLE and PARAGRAPHS.
-- Infer and apply any scale/unit ONLY if explicitly stated.
-- Output MUST be raw Python code only.
-- Include comments throughout your response to explain your code.
-- End with a single print(...) of the final answer.
+PROMPT_TMPL = """Write a Python program that answers the QUESTION.
 
-TABLE:\n{table}\nPARAGRAPHS:\n{paras}\nQUESTION:\n{question}\nGOLD_DERIVATION:\n{derivation}"""
+Sources of truth:
+- TABLE and PARAGRAPHS are the ONLY sources of facts and numbers.
+- You MAY use GOLD_DERIVATION only as a hint for the reasoning steps.
+- Determine the unit/scale ONLY from explicit cues in TABLE, QUESTION, or PARAGRAPHS.
 
+Strict output rules:
+- Output MUST be raw Python code only. Do NOT use Markdown fences.
+- Do NOT print anything except the final answer.
+- End with EXACTLY ONE print(...) statement (the very last line).
+
+Answer requirements:
+1) Compute the final answer and store it in a variable named ans.
+2) ans MUST be either:
+   - a string, OR
+   - a list of strings (for questions with multiple valid answers).
+3) If the QUESTION can have multiple answers (e.g., "which years", "list all", filtering conditions), set ans to a list of strings containing ALL matching answers.
+4) Do not include duplicates in list answers.
+
+Scale requirements (must match exactly one of these 5):
+- The JSON field "scale" MUST be exactly one of: "", "thousand", "million", "billion", "percent".
+
+Final output format:
+- Create a dictionary named out with exactly these keys:
+  out = {{"ans": ..., "scale": ...}}
+- Print EXACTLY one line of valid JSON.
+- The LAST line of the program MUST be:
+  print(json.dumps(out, ensure_ascii=False))
+
+TABLE:
+{table}
+
+PARAGRAPHS:
+{paras}
+
+QUESTION:
+{question}
+
+GOLD_DERIVATION (hint only):
+{derivation}
+"""
 
 
 def call_hf_chat(url, token, model, prompt, max_retries=8):
@@ -82,7 +114,7 @@ def main():
                 t0 = time.time()
                 try:
                     code = call_hf_chat(url, token, model, prompt)
-                    rec = {"qid": qid, "split": args.split, "doc_id": doc_id, "gold_answer": q.get("answer"), "teacher_model": model, "latency_sec": round(time.time() - t0, 3), "generated_code": code, "status": "ok"}
+                    rec = {"qid": qid, "split": args.split, "doc_id": doc_id, "gold_answer": q.get("answer"), "gold_scale": q.get("scale"), "teacher_model": model, "latency_sec": round(time.time() - t0, 3), "generated_code": code, "status": "ok"}
                 except Exception as e:
                     rec = {"qid": qid, "status": "api_error", "error": str(e)}
 

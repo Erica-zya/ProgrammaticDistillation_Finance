@@ -22,6 +22,8 @@ def _worker_exec(code, q):
         allowed = ('abs','min','max','sum','round','int','float','str','len','range','enumerate','print')
         safe_env = {k: getattr(builtins, k) for k in allowed}
         safe_env['math'] = math
+        ## imort json
+        safe_env['json'] = json
         
         # clean the value of the answer to handle '$1,234.50', '15.5%', and '(100)' for negative numbers.
         def clean_val(x):
