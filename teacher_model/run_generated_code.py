@@ -19,7 +19,7 @@ def to_float_maybe(x):
 def _worker_exec(code, q):
     buf = io.StringIO()
     try:
-        allowed = ('abs','min','max','sum','round','int','float','str','len','range','enumerate','print')
+        allowed = ('abs','min','max','sum','round','int','float','str','len','range','enumerate','print', '__import__')
         safe_env = {k: getattr(builtins, k) for k in allowed}
         safe_env['math'] = math
         ## imort json

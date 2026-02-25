@@ -24,7 +24,6 @@ def run_debug_eval():
             table=example.table,
             paragraphs=example.paragraphs,
             question=example.question,
-            scale=example.scale
         )
 
         # Grade it

@@ -68,7 +68,7 @@ def negative_num_handle(x):
     :param x:  transform (134) -> -134
     :return:
     """
-    all = re.findall('(\([\d.\s]+\))', x.strip())
+    all = re.findall(r'(\([\d.\s]+\))', x.strip())
     if len(all) > 0:
         return -1
     return 1
@@ -78,7 +78,7 @@ def percent_num_handle(x):
     :param x:  transform 12% -> 12/100
     :return:
     """
-    all = re.findall('([\d.\s]+%)', x.strip())
+    all = re.findall(r'([\d.\s]+%)', x.strip())
     if len(all) > 0:
         return 0.01
     return 1
@@ -88,7 +88,7 @@ def word_scale_handle(x):
     :param x: 1 million = 1,000,000
     :return:
     """
-    iter = re.finditer('([\d.]+\s?[a-zA-Z]+)', x)
+    iter = re.finditer(r'([\d.]+\s?[a-zA-Z]+)', x)
     for one in iter:
         text = one.group(0).lower()
         scale_val = scale_to_num(text)

@@ -1,0 +1,277 @@
+(base) elanaaa@DNa1f01ac ProgrammaticDistillation_Finance % python prompt_optimization/run_manual_prompt_on_sample.py
+==================== MANUAL PROMPT (code_generation.PROMPT_TMPL) on sample_of_each_type.json ====================
+
+Sample 1: What is the 2019 average rate of inflation?...
+  ✅ PASS
+Sample 2: Which year have greater total accumulated amortisation? ...
+  ✅ PASS
+Sample 3: How many product categories are available?...
+  ✅ PASS
+Sample 4: What was the change in raw materials between 2018 and 2019?...
+  ✅ PASS
+Sample 5: What is the percentage of the value charged to the deficit expressed a...
+  ✅ PASS
+Sample 6: In which year was Estimated grant date fair value per ordinary share l...
+  ✅ PASS
+Sample 7: In which year is the value of finished products higher?...
+  ❌ FAIL
+  --- Debug ---
+  Expected: ['2019'] (scale=)
+  Got:      ['2019'] (scale=thousand)
+  Exec status: ok  |  Exec error: (none)
+  Last line of stdout: '{"ans": ["2019"], "scale": "thousand"}'
+
+Sample 8: What is the total number of countries that the Group leases offices in...
+  ❌ FAIL
+  --- Debug ---
+  Expected: 7 (scale=)
+  Got:      ['Netherlands', 'United States', 'Australia', 'Philippines', 'India', 'Japan', 'Turkey'] (scale=)
+  Exec status: ok  |  Exec error: (none)
+  Last line of stdout: '{"ans": ["Netherlands", "United States", "Australia", "Philippines", "India", "Japan", "Turkey"], "s'
+
+Sample 9: How many years did the Federal statutory income tax rate exceed 30.0%?...
+  ❌ FAIL
+  --- Debug ---
+  Expected: 1 (scale=)
+  Got:      ['2017'] (scale=)
+  Exec status: ok  |  Exec error: (none)
+  Last line of stdout: '{"ans": ["2017"], "scale": ""}'
+
+Sample 10: Which quarters ended did the Gross Margin exceed $120,000 thousand?...
+  ❌ FAIL
+  --- Debug ---
+  Expected: ['Dec-31', 'Mar-31'] (scale=)
+  Got:      ['Dec-31', 'Mar-31'] (scale=thousand)
+  Exec status: ok  |  Exec error: (none)
+  Last line of stdout: '{"ans": ["Dec-31", "Mar-31"], "scale": "thousand"}'
+
+Sample 11: In which year was the weighted-average grant-date fair value of restri...
+  ✅ PASS
+
+============================================================
+MANUAL PROMPT (PROMPT_TMPL) on sample_of_each_type.json: 7/11 correct (64%)
+============================================================
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+(base) elanaaa@DNa1f01ac ProgrammaticDistillation_Finance % python prompt_optimization/check_errors.py
+
+==================== ERROR ANALYSIS ====================
+
+`max_retries` is not supported. It will be ignored.
+Sample 1: What is the 2019 average rate of inflation?
+Status: ✅ PASS
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 2: Which year have greater total accumulated amortisation? 
+Status: ✅ PASS
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 3: How many product categories are available?
+Status: ✅ PASS
+
+
+Sample 4: What was the change in raw materials between 2018 and 2019?
+Status: ✅ PASS
+
+
+Sample 5: What is the percentage of the value charged to the deficit expressed as a percentage of total cost of common shares?
+Status: ✅ PASS
+
+
+Sample 6: In which year was Estimated grant date fair value per ordinary share less than 30?
+Status: ❌ FAIL
+---------- Debug Info ----------
+Expected Answer: ['2018', '2017']
+Generated Program:
+print(json.dumps({"ans": "2017", "scale": ""}, ensure_ascii=False))
+Actual Output: {"ans": "2017", "scale": ""}, Error: , Status: ok
+--------------------------------
+
+
+Sample 7: In which year is the value of finished products higher?
+Status: ✅ PASS
+
+
+Sample 8: What is the total number of countries that the Group leases offices in?
+Status: ✅ PASS
+
+
+Sample 9: How many years did the Federal statutory income tax rate exceed 30.0%?
+Status: ✅ PASS
+
+
+Sample 10: Which quarters ended did the Gross Margin exceed $120,000 thousand?
+Status: ❌ FAIL
+---------- Debug Info ----------
+Expected Answer: ['Dec-31', 'Mar-31']
+Generated Program:
+gross_margin_threshold = 120000
+quarters = ["Jun-30", "Sep-30", "Dec-31", "Mar-31"]
+gross_margins = [94821, 113565, 123750, 126406]
+exceeding_quarters = [quarters[i] for i, margin in enumerate(gross_margins) if margin > gross_margin_threshold]
+
+ans = exceeding_quarters
+scale = "thousand"
+
+print(json.dumps({"ans": ans, "scale": scale}, ensure_ascii=False))
+Actual Output: {"ans": ["Dec-31", "Mar-31"], "scale": "thousand"}, Error: , Status: ok
+--------------------------------
+
+
+Sample 11: In which year was the weighted-average grant-date fair value of restricted share awards granted the largest?
+Status: ✅ PASS
+
+
+
+
+
+
+
+Yun's
+==================== ERROR ANALYSIS ====================
+
+`max_retries` is not supported. It will be ignored.
+Sample 1: What is the 2019 average rate of inflation?
+Status: ✅ PASS
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 2: Which year have greater total accumulated amortisation? 
+Status: ❌ FAIL
+---------- Debug Info ----------
+Expected Answer: ['2019']
+Generated Program:
+# Define the accumulated amortisation for both years
+accumulated_amortisation_2019 = 5580
+accumulated_amortisation_2018 = 3261
+
+# Determine which year has the greater accumulated amortisation
+if accumulated_amortisation_2019 > accumulated_amortisation_2018:
+    ans = "2019"
+else:
+    ans = "2018"
+
+print(ans)
+Actual Output: 2019, Error: , Status: ok
+--------------------------------
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 3: How many product categories are available?
+Status: ✅ PASS
+
+
+Sample 4: What was the change in raw materials between 2018 and 2019?
+Status: ✅ PASS
+
+
+Sample 5: What is the percentage of the value charged to the deficit expressed as a percentage of total cost of common shares?
+Status: ✅ PASS
+
+
+Sample 6: In which year was Estimated grant date fair value per ordinary share less than 30?
+Status: ❌ FAIL
+---------- Debug Info ----------
+Expected Answer: ['2018', '2017']
+Generated Program:
+# Define the estimated grant date fair value per ordinary share for each year
+grant_date_fair_value = {
+    2019: 37.15,
+    2018: 26.52,
+    2017: 20.22
+}
+
+# Find the years where the estimated grant date fair value per ordinary share is less than 30
+years_less_than_30 = [year for year, value in grant_date_fair_value.items() if value < 30]
+
+# Store the result in the variable 'ans'
+ans = years_less_than_30
+
+print(ans)
+Actual Output: [2018, 2017], Error: , Status: ok
+--------------------------------
+
+
+Sample 7: In which year is the value of finished products higher?
+Status: ✅ PASS
+
+
+Sample 8: What is the total number of countries that the Group leases offices in?
+Status: ✅ PASS
+
+
+Sample 9: How many years did the Federal statutory income tax rate exceed 30.0%?
+Status: ✅ PASS
+
+
+Sample 10: Which quarters ended did the Gross Margin exceed $120,000 thousand?
+Status: ✅ PASS
+
+
+Sample 11: In which year was the weighted-average grant-date fair value of restricted share awards granted the largest?
+Status: ✅ PASS
+
+
+
+
+
+
+
+
+the one we have now!!!!
+
+(base) elanaaa@DNa1f01ac ProgrammaticDistillation_Finance % python prompt_optimization/check_errors.py   
+
+==================== ERROR ANALYSIS ====================
+
+`max_retries` is not supported. It will be ignored.
+Sample 1: What is the 2019 average rate of inflation?
+Status: ✅ PASS
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 2: Which year have greater total accumulated amortisation? 
+Status: ✅ PASS
+
+
+`max_retries` is not supported. It will be ignored.
+Sample 3: How many product categories are available?
+Status: ✅ PASS
+
+
+Sample 4: What was the change in raw materials between 2018 and 2019?
+Status: ✅ PASS
+
+
+Sample 5: What is the percentage of the value charged to the deficit expressed as a percentage of total cost of common shares?
+Status: ✅ PASS
+
+
+Sample 6: In which year was Estimated grant date fair value per ordinary share less than 30?
+Status: ✅ PASS
+
+
+Sample 7: In which year is the value of finished products higher?
+Status: ✅ PASS
+
+
+Sample 8: What is the total number of countries that the Group leases offices in?
+Status: ✅ PASS
+
+
+Sample 9: How many years did the Federal statutory income tax rate exceed 30.0%?
+Status: ✅ PASS
+
+
+Sample 10: Which quarters ended did the Gross Margin exceed $120,000 thousand?
+Status: ✅ PASS
+
+
+Sample 11: In which year was the weighted-average grant-date fair value of restricted share awards granted the largest?
+Status: ✅ PASS
