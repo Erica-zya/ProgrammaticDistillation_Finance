@@ -13,11 +13,10 @@ SPLIT_MAP = {
     "test": "tatqa_dataset_test_filtered.json"
 }
 
-BASE_PROMPT = """Write a Python program that answers the QUESTION.
+PROMPT_TMPL = """Write a Python program that answers the QUESTION.
 
 Sources of truth:
 - TABLE and PARAGRAPHS are the ONLY sources of facts and numbers.
-{derivation_instruction}
 - Determine the unit/scale ONLY from explicit cues in TABLE, QUESTION, or PARAGRAPHS.
 
 Strict output rules:
@@ -50,10 +49,10 @@ PARAGRAPHS:
 {paras}
 
 QUESTION:
-{question}{derivation_section}"""
+{question}
+"""
 
-DERIV_INSTR = "- You MAY use GOLD_DERIVATION only as a hint for the reasoning steps."
-DERIV_SECTION = "\n\nGOLD_DERIVATION (hint only):\n{derivation}"
+
 
 def call_hf_chat(url, token, model, prompt, max_retries=8):
     headers = {"Authorization": f"Bearer {token}"}
@@ -72,6 +71,9 @@ def call_hf_chat(url, token, model, prompt, max_retries=8):
             time.sleep(1.5 * (2 ** attempt))
     return ""
 
+
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="train", choices=list(SPLIT_MAP.keys()))
@@ -79,11 +81,11 @@ def main():
     args = ap.parse_args()
     load_dotenv()
 
-    token, model = os.getenv("HF_TOKEN"), os.getenv("HF_MODEL_72B", "Qwen/Qwen2.5-72B-Instruct")
+    token, model = os.getenv("HF_TOKEN"), os.getenv("HF_MODEL_7B", "Qwen/Qwen2.5-7B-Instruct")
     url = os.getenv("HF_ROUTER_URL", "https://router.huggingface.co/v1/chat/completions")
     
     in_path = DATA_DIR / SPLIT_MAP[args.split]
-    out_path = OUT_DIR / f"teacher_codegen_{args.split}.jsonl"
+    out_path = OUT_DIR / f"student_codegen_{args.split}.jsonl"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     done = {str(json.loads(line)["qid"]) for line in out_path.open() if line.strip()} if out_path.exists() else set()
@@ -104,36 +106,17 @@ def main():
                 qid = str(q.get("uid", f"{doc_id}_{qi}"))
                 if qid in done: continue
 
-                if args.split == "train":
-                    # give derivation when in train set
-                    prompt = BASE_PROMPT.format(
-                        derivation_instruction=DERIV_INSTR,
-                        derivation_section=DERIV_SECTION,
-                        table=table_text,
-                        paras=paras_text,
-                        question=q.get("question", ""),
-                        derivation=q.get("derivation", "")
-                    )
-                else:
-                    # no derivation when in test or dev set
-                    prompt = BASE_PROMPT.format(
-                        derivation_instruction="",
-                        derivation_section="",
-                        table=table_text,
-                        paras=paras_text,
-                        question=q.get("question", "")
-                    )
-
+                prompt = PROMPT_TMPL.format(table=table_text, paras=paras_text, question=q.get("question", ""))
                 t0 = time.time()
                 try:
                     code = call_hf_chat(url, token, model, prompt)
-                    rec = {"qid": qid, "split": args.split, "doc_id": doc_id, "gold_answer": q.get("answer"), "teacher_model": model, "latency_sec": round(time.time() - t0, 3), "generated_code": code, "status": "ok"}
+                    rec = {"qid": qid, "split": args.split, "doc_id": doc_id, "gold_answer": q.get("answer"), "student_model": model, "latency_sec": round(time.time() - t0, 3), "generated_code": code, "status": "ok"}
                 except Exception as e:
                     rec = {"qid": qid, "status": "api_error", "error": str(e)}
 
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 written += 1
-                if written % 10 == 0: print(f"Processed {written} samples in {args.split}...")
+                if written % 10 == 0: print(f"Processed {written} samples...")
 
 if __name__ == "__main__":
     main()

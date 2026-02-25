@@ -16,3 +16,5 @@ __pycache__/
 
 # logs
 *.log
+student_model/.env
+.env

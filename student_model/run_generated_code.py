@@ -59,9 +59,9 @@ def main():
     ap.add_argument("--out_jsonl", type=str, help="")
     args = ap.parse_args()
     
-    base_dir = Path("teacher_model/outputs")
-    in_path = Path(args.in_jsonl) if args.in_jsonl else base_dir / f"teacher_codegen_{args.split}.jsonl"
-    out_path = Path(args.out_jsonl) if args.out_jsonl else base_dir / f"teacher_codegen_{args.split}_results.jsonl"
+    base_dir = Path("student_model/outputs")
+    in_path = Path(args.in_jsonl) if args.in_jsonl else base_dir / f"student_codegen_{args.split}.jsonl"
+    out_path = Path(args.out_jsonl) if args.out_jsonl else base_dir / f"student_codegen_{args.split}_results.jsonl"
 
     if not in_path.exists():
         print(f"Error: Input file {in_path} not found!")
