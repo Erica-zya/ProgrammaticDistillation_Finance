@@ -55,6 +55,7 @@ QUESTION:
 DERIV_INSTR = "- You MAY use GOLD_DERIVATION only as a hint for the reasoning steps."
 DERIV_SECTION = "\n\nGOLD_DERIVATION (hint only):\n{derivation}"
 
+
 def call_hf_chat(url, token, model, prompt, max_retries=8):
     headers = {"Authorization": f"Bearer {token}"}
     payload = {"model": model, "messages": [
@@ -72,10 +73,15 @@ def call_hf_chat(url, token, model, prompt, max_retries=8):
             time.sleep(1.5 * (2 ** attempt))
     return ""
 
+def str2bool(v):
+    return str(v).lower() in ('yes', 'true', 't', 'y', '1')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="train", choices=list(SPLIT_MAP.keys()))
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--derivation", type=str2bool, default=False, help="Set to true to include derivation")
     args = ap.parse_args()
     load_dotenv()
 
@@ -83,7 +89,10 @@ def main():
     url = os.getenv("HF_ROUTER_URL", "https://router.huggingface.co/v1/chat/completions")
     
     in_path = DATA_DIR / SPLIT_MAP[args.split]
-    out_path = OUT_DIR / f"teacher_codegen_{args.split}.jsonl"
+    
+    suffix = "_with_deriv" if args.derivation else ""
+    out_path = OUT_DIR / f"teacher_codegen_{args.split}{suffix}.jsonl"
+    
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     done = {str(json.loads(line)["qid"]) for line in out_path.open() if line.strip()} if out_path.exists() else set()
@@ -104,18 +113,15 @@ def main():
                 qid = str(q.get("uid", f"{doc_id}_{qi}"))
                 if qid in done: continue
 
-                if args.split == "train":
-                    # give derivation when in train set
+                if args.derivation:
                     prompt = BASE_PROMPT.format(
                         derivation_instruction=DERIV_INSTR,
-                        derivation_section=DERIV_SECTION,
+                        derivation_section=DERIV_SECTION.format(derivation=q.get("derivation", "")),
                         table=table_text,
                         paras=paras_text,
-                        question=q.get("question", ""),
-                        derivation=q.get("derivation", "")
+                        question=q.get("question", "")
                     )
                 else:
-                    # no derivation when in test or dev set
                     prompt = BASE_PROMPT.format(
                         derivation_instruction="",
                         derivation_section="",
