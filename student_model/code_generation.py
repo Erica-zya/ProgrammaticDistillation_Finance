@@ -54,21 +54,39 @@ QUESTION:
 
 
 
-def call_hf_chat(url, token, model, prompt, max_retries=8):
+def call_hf_chat(url, token, model, prompt, max_retries=5):
     headers = {"Authorization": f"Bearer {token}"}
-    payload = {"model": model, "messages": [
-        {"role": "system", "content": "Return ONLY raw Python code. No Markdown fences."},
-        {"role": "user", "content": prompt}
-    ], "temperature": 0.0, "max_tokens": 512}
+    payload = {
+        "model": model, 
+        "messages": [
+            {"role": "system", "content": "Return ONLY raw Python code. No Markdown fences."},
+            {"role": "user", "content": prompt}
+        ], 
+        "temperature": 0.01,
+        "max_tokens": 512
+    }
     
     for attempt in range(max_retries):
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=180)
+            r = requests.post(url, headers=headers, json=payload, timeout=30)
+            
+            if r.status_code != 200:
+                print(f"\n[API Error] Status: {r.status_code}, Body: {r.text}")
+                
+            if r.status_code == 429 or r.status_code >= 500:
+                wait_time = 1.5 * (2 ** attempt)
+                print(f"Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+                continue
+                
             r.raise_for_status()
             content = r.json()["choices"][0]["message"]["content"]
             return re.sub(r"^```(?:python)?\s*\n([\s\S]*?)\n```$", r"\1", content.strip(), flags=re.IGNORECASE).strip()
-        except requests.RequestException:
-            time.sleep(1.5 * (2 ** attempt))
+            
+        except Exception as e:
+            print(f"\n[Connection Error] {e}")
+            if attempt < max_retries - 1:
+                time.sleep(1.5 * (2 ** attempt))
     return ""
 
 
@@ -81,9 +99,8 @@ def main():
     args = ap.parse_args()
     load_dotenv()
 
-    token, model = os.getenv("HF_TOKEN"), os.getenv("HF_MODEL_7B", "Qwen/Qwen2.5-7B-Instruct")
+    token, model = os.getenv("HF_TOKEN"), os.getenv("HF_MODEL_7B", "qwen/qwen2.5-7b-instruct")
     url = os.getenv("HF_ROUTER_URL", "https://router.huggingface.co/v1/chat/completions")
-    
     in_path = DATA_DIR / SPLIT_MAP[args.split]
     out_path = OUT_DIR / f"student_codegen_{args.split}.jsonl"
     out_path.parent.mkdir(parents=True, exist_ok=True)
