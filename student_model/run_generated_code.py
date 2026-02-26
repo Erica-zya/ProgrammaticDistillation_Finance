@@ -85,23 +85,26 @@ def main():
             continue
 
         stdout, error, status = exec_with_timeout(code)
-        
-        last_line = None
-        pred = None
-        try:
-            lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
-            if lines:
-                last_line = lines[-1]
-                parsed_out = json.loads(last_line)
-                pred = parsed_out.get("ans")
-                row["pred_scale"] = parsed_out.get("scale")
-        except:
-            pred = to_float_maybe(last_line) if last_line else None
+        lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
+        last_line = lines[-1] if lines else None
+
+        pred_ans = to_float_maybe(last_line) if last_line else last_line
+        pred_scale = ""
+        if last_line:
+            try:
+                parsed = json.loads(last_line)
+                if isinstance(parsed, dict) and "ans" in parsed:
+                    pred_ans = parsed.get("ans")
+                    pred_scale = parsed.get("scale", "") or ""
+            except (json.JSONDecodeError, TypeError):
+                pass
 
         row.update({
             "run_status": status,
             "stdout_last": last_line,
-            "pred_answer": pred if pred is not None else last_line,
+            "pred_answer": pred_ans if pred_ans is not None else last_line,
+            "pred_ans": pred_ans,
+            "pred_scale": pred_scale,
             "exec_error": error or None,
             "exec_stdout": stdout if status != "ok" else None
         })
