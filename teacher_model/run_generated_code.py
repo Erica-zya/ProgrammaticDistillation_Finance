@@ -65,8 +65,8 @@ def exec_with_timeout(code, timeout_s=2.0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--in_jsonl", default="teacher_model/outputs/teacher_codegen_test.jsonl")
-    ap.add_argument("--out_jsonl", default="teacher_model/outputs/teacher_codegen_test_results.jsonl")
+    ap.add_argument("--in_jsonl", required=True, help="e.g. teacher_model/outputs/teacher_codegen_train.jsonl or teacher_codegen_test.jsonl")
+    ap.add_argument("--out_jsonl", required=True, help="e.g. teacher_model/outputs/teacher_codegen_train_results.jsonl or teacher_codegen_test_results.jsonl")
     args = ap.parse_args()
     
     in_path = Path(args.in_jsonl)
@@ -89,10 +89,23 @@ def main():
         last_line = lines[-1] if lines else None
         pred = to_float_maybe(last_line)
 
+        pred_ans = pred if pred is not None else last_line
+        pred_scale = ""
+        if last_line:
+            try:
+                parsed = json.loads(last_line)
+                if isinstance(parsed, dict) and "ans" in parsed:
+                    pred_ans = parsed["ans"]
+                    pred_scale = parsed.get("scale", "") or ""
+            except (json.JSONDecodeError, TypeError):
+                pass
+
         row.update({
             "run_status": status,
             "stdout_last": last_line,
             "pred_answer": pred if pred is not None else last_line,
+            "pred_ans": pred_ans,
+            "pred_scale": pred_scale,
             "exec_error": error or None,
             "exec_stdout": stdout if status != "ok" else None
         })

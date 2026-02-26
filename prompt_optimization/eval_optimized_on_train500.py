@@ -1,11 +1,12 @@
 """
-Run the optimized prompt (best_financial_prompt.json) on the first 500 samples
-from tatqa_dataset_train_filtered.json and report EM / F1 using the same
+Run the optimized prompt (e.g. best_financial_prompt.json or best_financial_prompt_n100_seed42.json)
+on the first N samples from tatqa_dataset_train_filtered.json and report EM / F1 using the same
 TaTQA evaluation as in the DSPy metric.
 
 Usage (from repo root):
   python prompt_optimization/eval_optimized_on_train500.py
-  python prompt_optimization/eval_optimized_on_train500.py --limit 100   # optional: fewer samples
+  python prompt_optimization/eval_optimized_on_train500.py --limit 100
+  python prompt_optimization/eval_optimized_on_train500.py --prompt best_financial_prompt_n100_seed42.json
 """
 import argparse
 import json
@@ -16,6 +17,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "test_metric"))
+sys.path.insert(0, str(PROJECT_ROOT / "prompt_optimization"))
 from tatqa_metric import TaTQAEmAndF1
 
 from dotenv import load_dotenv
@@ -26,7 +28,7 @@ from optimize_prompt import FinancialCodegen, normalize_scale, DATA_DIR
 
 load_dotenv()
 TRAIN_PATH = DATA_DIR / "tatqa_dataset_train_filtered.json"
-PROMPT_PATH = Path(__file__).resolve().parent / "best_financial_prompt.json"
+PROMPT_DIR = Path(__file__).resolve().parent
 
 
 def iter_train_questions(limit: int):
@@ -49,21 +51,29 @@ def iter_train_questions(limit: int):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=500, help="Number of train questions to evaluate")
+    ap.add_argument("--prompt", type=str, default="best_financial_prompt.json",
+                    help="Prompt JSON filename (e.g. best_financial_prompt_n100_seed42.json) or path")
     args = ap.parse_args()
 
     token = os.getenv("HF_TOKEN")
     if not token:
         raise RuntimeError("HF_TOKEN not set. Use .env or export HF_TOKEN.")
 
+    prompt_path = Path(args.prompt)
+    if not prompt_path.is_absolute():
+        prompt_path = PROMPT_DIR / prompt_path
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
+
     dspy.configure(lm=dspy.LM("huggingface/Qwen/Qwen2.5-72B-Instruct", api_key=token))
     compiled = dspy.Predict(FinancialCodegen)
-    compiled.load(PROMPT_PATH)
+    compiled.load(prompt_path)
 
     metric = TaTQAEmAndF1()
     samples = list(iter_train_questions(args.limit))
     n_total = len(samples)
 
-    print(f"Evaluating optimized prompt on first {n_total} train samples (from {TRAIN_PATH.name})...")
+    print(f"Evaluating optimized prompt ({prompt_path.name}) on first {n_total} train samples (from {TRAIN_PATH.name})...")
     print()
 
     for i, (table_text, paragraphs_text, q) in enumerate(samples):
@@ -103,7 +113,7 @@ def main():
     em, f1, scale_em, _ = metric.get_overall_metric(reset=False)
     print()
     print("=" * 60)
-    print(f"Optimized prompt (best_financial_prompt.json) on first {n_total} train samples")
+    print(f"Optimized prompt ({prompt_path.name}) on first {n_total} train samples")
     print("=" * 60)
     print(f"  EM:     {em * 100:.2f}%")
     print(f"  F1:     {f1 * 100:.2f}%")

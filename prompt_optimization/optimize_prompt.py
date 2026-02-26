@@ -1,5 +1,6 @@
 import os
 import json
+import random
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -187,8 +188,56 @@ def load_data(sample_json: Path, limit: int | None = None):
 
     return dataset
 
+
+def load_random_train(n: int = 100, seed: int = 42) -> list:
+    """
+    Build a training set of n random questions from the train filtered dataset.
+    Use for optimization to reduce overfitting to a small fixed jury set.
+    """
+    data = json.loads(TRAIN_PATH.read_text(encoding="utf-8"))
+    pairs = []
+    for ctx in data:
+        table_rows = ctx.get("table", {}).get("table", [])
+        table_text = "\n".join(" | ".join(map(str, row)) for row in table_rows)
+        paragraphs_text = "\n".join(p.get("text", "") for p in ctx.get("paragraphs", []))
+        for q_obj in ctx.get("questions", []):
+            pairs.append((table_text, paragraphs_text, q_obj))
+
+    random.seed(seed)
+    random.shuffle(pairs)
+    chosen = pairs[:n]
+
+    dataset = []
+    for table_text, paragraphs_text, q_obj in chosen:
+        example = dspy.Example(
+            qid=q_obj.get("uid"),
+            table=table_text,
+            paragraphs=paragraphs_text,
+            question=q_obj.get("question", ""),
+            scale=q_obj.get("scale", ""),
+            answer=q_obj.get("answer"),
+            answer_type=q_obj.get("answer_type", "arithmetic"),
+            derivation=q_obj.get("derivation", ""),
+        ).with_inputs("table", "paragraphs", "question")
+        dataset.append(example)
+
+    return dataset
+
+
 if __name__ == '__main__':
-    trainset = load_data(SAMPLE_PATH)
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--n", type=int, default=100, help="Number of random train samples (default 100)")
+    ap.add_argument("--seed", type=int, default=42, help="Random seed for sampling")
+    ap.add_argument("--jury", action="store_true", help="Use original 11 jury samples (sample_of_each_type.json) instead of random train")
+    args = ap.parse_args()
+
+    if args.jury:
+        trainset = load_data(SAMPLE_PATH)
+        print(f"Optimizing on {len(trainset)} jury samples (sample_of_each_type.json).")
+    else:
+        trainset = load_random_train(n=args.n, seed=args.seed)
+        print(f"Optimizing on {len(trainset)} random train samples (seed={args.seed}).")
 
     # initialize MIPROv2 (let 'auto' choose search size)
     # MIPRO maximizes the returned value; use continuous score 0.5*em + 0.5*f1
@@ -204,6 +253,14 @@ if __name__ == '__main__':
 
     out_path = Path(__file__).resolve().parent / "best_financial_prompt.json"
     optimized_program.save(out_path)
+
+    # Also save a named copy (by run type) for comparison / rollback
+    if args.jury:
+        out_also = Path(__file__).resolve().parent / "best_financial_prompt_jury.json"
+    else:
+        out_also = Path(__file__).resolve().parent / f"best_financial_prompt_n{args.n}_seed{args.seed}.json"
+    optimized_program.save(out_also)
+    print(f"Saved best prompt to {out_path.name} and {out_also.name}")
 
     if hasattr(teleprompter, 'trials_df'):
         print("\n--- Optimization Results ---")
