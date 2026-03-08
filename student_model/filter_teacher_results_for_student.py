@@ -60,13 +60,16 @@ def pred_ans_scale_from_row(row):
 def main():
     ap = argparse.ArgumentParser(description="Filter teacher results for student fine-tuning")
     ap.add_argument("--in_jsonl", type=str, default="student_model/teacher_full_train/teacher_codegen_train_run.jsonl", help="Teacher train RUN results JSONL (has run_status, pred_ans, stdout_last)")
-    ap.add_argument("--out_jsonl", type=str, default="student_model/teacher_full_train/student_train_from_teacher.jsonl", help="Output JSONL for student training")
+    ap.add_argument("--out_jsonl", type=str, default="student_model/teacher_full_train/student_train_from_teacher.jsonl", help="Output JSONL for student training (teacher correct)")
+    ap.add_argument("--out_wrong_jsonl", type=str, default="student_model/teacher_full_train/student_train_from_teacher_round2_wrong.jsonl", help="Output JSONL for round 2: samples teacher got wrong (exec fail or answer wrong)")
     ap.add_argument("--train_json", type=str, default=None, help="Train filtered JSON (default: dataset_filtered/tatqa_dataset_train_filtered.json)")
     args = ap.parse_args()
 
     in_path = Path(args.in_jsonl)
     out_path = Path(args.out_jsonl)
+    out_wrong_path = Path(args.out_wrong_jsonl)
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_wrong_path.parent.mkdir(parents=True, exist_ok=True)
 
     train_path = Path(args.train_json) if args.train_json else TRAIN_PATH
     if not train_path.exists():
@@ -79,47 +82,56 @@ def main():
     metric = TaTQAEmAndF1()
 
     retained = []
+    wrong = []  # round 2: teacher got wrong (exec fail or answer wrong)
     n_ok = n_correct = 0
+    n_skipped_qid = 0
     for line in in_path.open(encoding="utf-8"):
         if not line.strip():
             continue
         row = json.loads(line)
         qid = row.get("qid")
         if not qid or qid not in qid_to_ctx:
+            n_skipped_qid += 1
             continue
 
-        # Must have execution success 
+        ctx = qid_to_ctx[qid]
+        base_row = {"qid": qid, "table": ctx["table"], "paragraphs": ctx["paragraphs"], "question": ctx["question"], "gold_answer": ctx["answer"], "gold_scale": ctx["scale"]}
+
+        # Must have execution success
         if row.get("run_status") != "ok" or not (row.get("generated_code") or "").strip():
+            wrong.append({**base_row, "generated_code": row.get("generated_code", ""), "why_wrong": "exec_fail", "run_status": row.get("run_status", "")})
             continue
         n_ok += 1
 
-        # and have answer correctness — TaTQA EM 
-        ctx = qid_to_ctx[qid]
+        # and have answer correctness — TaTQA EM
         ground_truth = {"answer_type": ctx["answer_type"], "scale": ctx["scale"], "answer": ctx["answer"]}
         pred_ans, pred_scale = pred_ans_scale_from_row(row)
         metric(ground_truth, pred_ans if pred_ans is not None else [], pred_scale=pred_scale)
         em, _, _, _ = metric.get_overall_metric(reset=True)
         if em < 1.0:
+            wrong.append({**base_row, "generated_code": row["generated_code"], "why_wrong": "answer_wrong", "pred_ans": pred_ans, "pred_scale": pred_scale})
             continue
         n_correct += 1
 
-        out_row = {
-            "qid": qid,
-            "table": ctx["table"],
-            "paragraphs": ctx["paragraphs"],
-            "question": ctx["question"],
-            "generated_code": row["generated_code"],
-            "gold_answer": ctx["answer"],
-            "gold_scale": ctx["scale"],
-        }
-        retained.append(out_row)
+        retained.append({**base_row, "generated_code": row["generated_code"]})
 
     with out_path.open("w", encoding="utf-8") as f:
         for r in retained:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    with out_wrong_path.open("w", encoding="utf-8") as f:
+        for r in wrong:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    n_processed = len(retained) + len(wrong)
+    assert len(retained) == n_correct, "Invariant: retained count should match n_correct"
 
     print(f"Teacher results: execution ok = {n_ok}, of those answer correct (EM) = {n_correct}, retained = {len(retained)} (both conditions)")
-    print(f"Saved to {out_path}")
+    print(f"Round 2 wrong = {len(wrong)} (exec_fail or answer_wrong)")
+    if n_skipped_qid:
+        print(f"Skipped (qid not in train gold): {n_skipped_qid}")
+    print(f"Check: retained + wrong = {len(retained)} + {len(wrong)} = {n_processed}")
+    print(f"Saved correct to {out_path}")
+    print(f"Saved round 2 wrong to {out_wrong_path}")
 
 
 if __name__ == "__main__":
