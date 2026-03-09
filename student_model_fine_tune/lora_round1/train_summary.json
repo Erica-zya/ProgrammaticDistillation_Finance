@@ -1,0 +1,10 @@
+{
+  "round": 1,
+  "num_samples": 5190,
+  "num_train_epochs": 1,
+  "output_dir": "/root/finance-data/outputs/lora_round1_4800",
+  "adapter_dir": "/root/finance-data/outputs/lora_round1_4800/adapter",
+  "log_history_path": "/root/finance-data/outputs/lora_round1_4800/trainer_log_history.json",
+  "train_sec": 1542.45,
+  "total_sec": 1556.47
+}
