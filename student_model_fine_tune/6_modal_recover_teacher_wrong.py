@@ -119,13 +119,31 @@ def exec_with_timeout(code, timeout_s=5.0):
     }
 
 
+def load_processed_qids(path: Path):
+    if not path.exists():
+        return set()
+    qids = set()
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+                if "qid" in obj:
+                    qids.add(obj["qid"])
+            except Exception:
+                pass
+    return qids
+
+
 @app.function(
-    gpu="L4",
+    gpu="A100-80GB",
     volumes={
         "/root/finance-data": finance_vol,
         "/root/.cache/huggingface": hf_cache_vol,
     },
-    timeout=6 * 3600,
+    timeout=24 * 3600,
 )
 def recover_teacher_wrong():
     import torch
@@ -138,10 +156,22 @@ def recover_teacher_wrong():
     out_dir = Path("/root/finance-data/outputs/recover_round1")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    with wrong_path.open("r", encoding="utf-8") as f:
-        data = [json.loads(line) for line in f if line.strip()]
+    success_path = out_dir / "recovered_successes.jsonl"
+    failure_path = out_dir / "recovered_failures.jsonl"
+    summary_path = out_dir / "recover_summary.json"
 
-    print("num wrong samples:", len(data))
+    processed_success_qids = load_processed_qids(success_path)
+    processed_failure_qids = load_processed_qids(failure_path)
+    processed_qids = processed_success_qids | processed_failure_qids
+
+    with wrong_path.open("r", encoding="utf-8") as f:
+        all_data = [json.loads(line) for line in f if line.strip()]
+
+    data = [ex for ex in all_data if ex["qid"] not in processed_qids]
+
+    print("num wrong samples total:", len(all_data))
+    print("already processed:", len(processed_qids))
+    print("remaining to process:", len(data))
 
     model_name = "Qwen/Qwen2.5-7B-Instruct"
     local_model_path = snapshot_download(
@@ -168,116 +198,158 @@ def recover_teacher_wrong():
     model = PeftModel.from_pretrained(base_model, str(adapter_path))
     model.eval()
 
-    successes = []
-    failures = []
-
     num_samples_per_q = 5
     max_new_tokens = 768
     temperature = 0.7
     top_p = 0.95
+    save_every = 20
 
-    for i, ex in enumerate(data, 1):
-        prompt = build_prompt(ex)
-        gold_ans = ex.get("gold_answer")
-        gold_scale = ex.get("gold_scale", "")
+    new_successes = 0
+    new_failures = 0
 
-        recovered = False
-        attempt_records = []
+    success_f = success_path.open("a", encoding="utf-8")
+    failure_f = failure_path.open("a", encoding="utf-8")
 
-        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    try:
+        for i, ex in enumerate(data, 1):
+            prompt = build_prompt(ex)
+            gold_ans = ex.get("gold_answer")
+            gold_scale = ex.get("gold_scale", "")
 
-        for attempt_idx in range(num_samples_per_q):
-            with torch.no_grad():
-                output_ids = model.generate(
-                    **inputs,
-                    do_sample=True,
-                    temperature=temperature,
-                    top_p=top_p,
-                    max_new_tokens=max_new_tokens,
-                    pad_token_id=tokenizer.eos_token_id,
+            recovered = False
+            attempt_records = []
+
+            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+            for attempt_idx in range(num_samples_per_q):
+                with torch.no_grad():
+                    output_ids = model.generate(
+                        **inputs,
+                        do_sample=True,
+                        temperature=temperature,
+                        top_p=top_p,
+                        max_new_tokens=max_new_tokens,
+                        pad_token_id=tokenizer.eos_token_id,
+                    )
+
+                gen_ids = output_ids[0][inputs["input_ids"].shape[1]:]
+                code = tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+
+                exec_res = exec_with_timeout(code, timeout_s=5.0)
+
+                pred_ans = None
+                pred_scale = ""
+                last_line = None
+
+                if exec_res["stdout"]:
+                    lines = [ln.strip() for ln in exec_res["stdout"].splitlines() if ln.strip()]
+                    if lines:
+                        last_line = lines[-1]
+                        try:
+                            parsed = json.loads(last_line)
+                            pred_ans = parsed.get("ans")
+                            pred_scale = parsed.get("scale", "")
+                        except Exception:
+                            pass
+
+                record = {
+                    "attempt_idx": attempt_idx,
+                    "generated_code": code,
+                    "run_status": exec_res["status"],
+                    "stdout_last": last_line,
+                    "pred_answer": pred_ans,
+                    "pred_scale": pred_scale,
+                    "exec_error": exec_res["error"] or None,
+                }
+                attempt_records.append(record)
+
+                if is_correct(pred_ans, pred_scale, gold_ans, gold_scale):
+                    recovered = True
+                    success_ex = {
+                        "qid": ex["qid"],
+                        "table": ex["table"],
+                        "paragraphs": ex["paragraphs"],
+                        "question": ex["question"],
+                        "gold_answer": ex["gold_answer"],
+                        "gold_scale": ex["gold_scale"],
+                        "generated_code": code,
+                        "source": "round1_recovered",
+                        "recover_round": 1,
+                        "recover_attempt": attempt_idx,
+                        "num_attempts": num_samples_per_q,
+                    }
+                    success_f.write(json.dumps(success_ex, ensure_ascii=False) + "\n")
+                    success_f.flush()
+                    new_successes += 1
+                    break
+
+            if not recovered:
+                fail_ex = dict(ex)
+                fail_ex["attempts"] = attempt_records
+                failure_f.write(json.dumps(fail_ex, ensure_ascii=False) + "\n")
+                failure_f.flush()
+                new_failures += 1
+
+            if i % save_every == 0:
+                current_total_success = len(processed_success_qids) + new_successes
+                current_total_failure = len(processed_failure_qids) + new_failures
+                current_total_processed = current_total_success + current_total_failure
+
+                summary = {
+                    "num_candidates_total": len(all_data),
+                    "already_processed_before_run": len(processed_qids),
+                    "processed_in_this_run": i,
+                    "num_successes_total": current_total_success,
+                    "num_failures_total": current_total_failure,
+                    "success_rate_over_processed": round(
+                        current_total_success / max(current_total_processed, 1), 4
+                    ),
+                    "num_samples_per_q": num_samples_per_q,
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "max_new_tokens": max_new_tokens,
+                    "save_every": save_every,
+                }
+                summary_path.write_text(
+                    json.dumps(summary, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                finance_vol.commit()
+                print(
+                    f"processed {i}/{len(data)} in this run | "
+                    f"new_successes={new_successes} | new_failures={new_failures} | "
+                    f"total_successes={current_total_success} | total_failures={current_total_failure}"
                 )
 
-            gen_ids = output_ids[0][inputs["input_ids"].shape[1]:]
-            code = tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+        final_total_success = len(load_processed_qids(success_path))
+        final_total_failure = len(load_processed_qids(failure_path))
+        final_total_processed = final_total_success + final_total_failure
 
-            exec_res = exec_with_timeout(code, timeout_s=5.0)
+        summary = {
+            "num_candidates_total": len(all_data),
+            "already_processed_before_run": len(processed_qids),
+            "processed_in_this_run": len(data),
+            "num_successes_total": final_total_success,
+            "num_failures_total": final_total_failure,
+            "success_rate_over_processed": round(
+                final_total_success / max(final_total_processed, 1), 4
+            ),
+            "num_samples_per_q": num_samples_per_q,
+            "temperature": temperature,
+            "top_p": top_p,
+            "max_new_tokens": max_new_tokens,
+            "save_every": save_every,
+            "status": "finished",
+        }
+        summary_path.write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        finance_vol.commit()
 
-            pred_ans = None
-            pred_scale = ""
-            last_line = None
-
-            if exec_res["stdout"]:
-                lines = [ln.strip() for ln in exec_res["stdout"].splitlines() if ln.strip()]
-                if lines:
-                    last_line = lines[-1]
-                    try:
-                        parsed = json.loads(last_line)
-                        pred_ans = parsed.get("ans")
-                        pred_scale = parsed.get("scale", "")
-                    except Exception:
-                        pass
-
-            record = {
-                "attempt_idx": attempt_idx,
-                "generated_code": code,
-                "run_status": exec_res["status"],
-                "stdout_last": last_line,
-                "pred_answer": pred_ans,
-                "pred_scale": pred_scale,
-                "exec_error": exec_res["error"] or None,
-            }
-            attempt_records.append(record)
-
-            if is_correct(pred_ans, pred_scale, gold_ans, gold_scale):
-                recovered = True
-                success_ex = {
-                    "qid": ex["qid"],
-                    "table": ex["table"],
-                    "paragraphs": ex["paragraphs"],
-                    "question": ex["question"],
-                    "gold_answer": ex["gold_answer"],
-                    "gold_scale": ex["gold_scale"],
-                    "generated_code": code,
-                    "source": "round1_recovered",
-                    "recover_round": 1,
-                    "recover_attempt": attempt_idx,
-                    "num_attempts": num_samples_per_q,
-                }
-                successes.append(success_ex)
-                break
-
-        if not recovered:
-            fail_ex = dict(ex)
-            fail_ex["attempts"] = attempt_records
-            failures.append(fail_ex)
-
-        if i % 20 == 0:
-            print(f"processed {i}/{len(data)} | successes={len(successes)} | failures={len(failures)}")
-
-    with (out_dir / "recovered_successes.jsonl").open("w", encoding="utf-8") as f:
-        for r in successes:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-    with (out_dir / "recovered_failures.jsonl").open("w", encoding="utf-8") as f:
-        for r in failures:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-    summary = {
-        "num_candidates": len(data),
-        "num_successes": len(successes),
-        "num_failures": len(failures),
-        "success_rate": round(len(successes) / max(len(data), 1), 4),
-        "num_samples_per_q": num_samples_per_q,
-        "temperature": temperature,
-        "top_p": top_p,
-        "max_new_tokens": max_new_tokens,
-    }
-    (out_dir / "recover_summary.json").write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-    finance_vol.commit()
+    finally:
+        success_f.close()
+        failure_f.close()
 
 
 @app.local_entrypoint()

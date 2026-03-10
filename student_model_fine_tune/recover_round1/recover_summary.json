@@ -1,0 +1,14 @@
+{
+  "num_candidates_total": 1413,
+  "already_processed_before_run": 0,
+  "processed_in_this_run": 1413,
+  "num_successes_total": 781,
+  "num_failures_total": 632,
+  "success_rate_over_processed": 0.5527,
+  "num_samples_per_q": 5,
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "max_new_tokens": 768,
+  "save_every": 20,
+  "status": "finished"
+}
