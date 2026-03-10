@@ -235,6 +235,6 @@ def main():
         #limit=5,
         num_return_sequences=1,
         adapter_path="/root/finance-data/outputs/"+model+"/adapter",
-        in_path="/root/finance-data/data/student_train_from_teacher_round2_wrong.jsonl",
-        out_path="/root/finance-data/outputs/"+model+"/outputs/student_generate_code_round1_train_wrong_single.jsonl",
+        in_path="/root/finance-data/data/test_flattened.jsonl",
+        out_path="/root/finance-data/outputs/"+model+"/outputs/student_generate_code_round1_test.jsonl",
     )
