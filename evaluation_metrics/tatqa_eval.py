@@ -109,24 +109,26 @@ def evaluate_prediction_file(gold_path: str,
 
     golden_answers = json.load(open(gold_path, encoding='utf-8'))
 
-    # Load gold answers (do not change)
+    # Load predictions: (1) single JSON { uid: [answer, scale] } or (2) JSONL with qid, pred_answer, pred_scale
     with open(pred_path, encoding="utf-8") as f:
-        results = [json.loads(line) for line in f if line.strip()]
+        raw = f.read().strip()
+    if raw.startswith("{"):
+        data = json.loads(raw)
+        if isinstance(data, dict) and data:
+            sample = next(iter(data.values()))
+            if isinstance(sample, (list, tuple)) and len(sample) >= 1:
+                pred_map = {k: (list(v) if isinstance(v, (list, tuple)) else [v, ""]) for k, v in data.items()}
+            else:
+                pred_map = data
+        else:
+            pred_map = {}
+    else:
+        results = [json.loads(line) for line in raw.splitlines() if line.strip()]
+        pred_map = {r["qid"]: [r["pred_answer"], r.get("pred_scale", "")] for r in results}
 
-    print(type(results))
-    
-    # Load predictions from JSONL (one JSON object per line)
-    pred_map={}
-    for r in results:
-        pred_map[r["qid"]]=[r["pred_answer"], r.get("pred_scale", "")]
-    
-    #print(pred_map)
-
-    
-
-    # Construct the dict expected by the evaluator:
-    # { qid: [pred_answer, ""] }
-    save_path=pred_path[:-6]+"_eval_input.json"
+    # Save intermediate file for debugging
+    from pathlib import Path
+    save_path = str(Path(pred_path).with_stem(Path(pred_path).stem + "_eval_input"))
     # Save an intermediate file for debugging / reproducibility
     # Example: teacher_codegen_test_results.jsonl -> teacher_codegen_test_results_eval_input.json
 

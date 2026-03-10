@@ -1,0 +1,18 @@
+{
+  "tag": "lr2e-04_r8_a16_ep1_bs1_ga4_drop0_05",
+  "config": {
+    "lr": 0.0002,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "num_epochs": 1,
+    "per_device_batch_size": 1,
+    "gradient_accumulation_steps": 4,
+    "lora_dropout": 0.05,
+    "max_samples": 500,
+    "seed": 42
+  },
+  "final_loss": 0.0480971522629261,
+  "train_sec": 145.77,
+  "total_sec": 156.75,
+  "output_dir": "/root/finance-data/outputs/sweep/lr2e-04_r8_a16_ep1_bs1_ga4_drop0_05"
+}
