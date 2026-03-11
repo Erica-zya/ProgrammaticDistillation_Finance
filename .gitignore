@@ -18,3 +18,22 @@ __pycache__/
 *.log
 student_model/.env
 .env
+
+
+# training checkpoints
+checkpoint-*/
+*/checkpoint-*/
+
+# pytorch training state
+*.pt
+*.pth
+*.bin
+
+# large model files
+*.safetensors
+
+# logs
+trainer_log_history.json
+
+# plots
+*.png

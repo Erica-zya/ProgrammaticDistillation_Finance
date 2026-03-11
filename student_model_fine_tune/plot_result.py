@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DATA_DIR = SCRIPT_DIR / "lora_round1_no_max_seq_mlp_exp3"
+DATA_DIR = SCRIPT_DIR / "lora_round2"
 OUT_DIR = SCRIPT_DIR / "plots"
 OUT_DIR.mkdir(exist_ok=True)
 
@@ -39,7 +39,7 @@ def plot_loss_curve(df, summary, out_dir):
     plt.legend()
     plt.tight_layout()
     
-    plt.savefig(out_dir / "round1_exp3_train_loss_curve.png", dpi=300)
+    plt.savefig(out_dir / "round2_exp1_train_loss_curve.png", dpi=300)
     plt.close()
 
 plot_loss_curve(df, summary, OUT_DIR)
@@ -57,7 +57,7 @@ def plot_learning_rate_curve(df, out_dir):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plt.savefig(out_dir / "round1_exp3_learning_rate_curve.png", dpi=300)
+    plt.savefig(out_dir / "round2_exp1_learning_rate_curve.png", dpi=300)
     plt.close()
 
 plot_learning_rate_curve(df, OUT_DIR)
