@@ -230,11 +230,11 @@ def generate_code_a(
 
 @app.local_entrypoint()
 def main():
-    model="lora_round1_no_max_seq_mlp_exp2"
+    model="lora_round2_no_max_seq_mlp_exp2_v3"
     generate_code_a.remote(
         #limit=5,
         num_return_sequences=1,
         adapter_path="/root/finance-data/outputs/"+model+"/adapter",
         in_path="/root/finance-data/data/test_flattened.jsonl",
-        out_path="/root/finance-data/outputs/"+model+"/outputs/student_generate_code_round1_test.jsonl",
+        out_path="/root/finance-data/outputs/"+model+"/outputs/student_generate_code_round2_test_v3.jsonl",
     )

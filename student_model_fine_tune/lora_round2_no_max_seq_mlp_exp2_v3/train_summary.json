@@ -1,0 +1,10 @@
+{
+  "round": 2,
+  "num_samples": 6169,
+  "num_train_epochs": 0.5,
+  "output_dir": "/root/finance-data/outputs/lora_round2_no_max_seq_mlp_exp2_v3",
+  "adapter_dir": "/root/finance-data/outputs/lora_round2_no_max_seq_mlp_exp2_v3/adapter",
+  "log_history_path": "/root/finance-data/outputs/lora_round2_no_max_seq_mlp_exp2_v3/trainer_log_history.json",
+  "train_sec": 782.6,
+  "total_sec": 797.72
+}
